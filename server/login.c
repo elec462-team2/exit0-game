@@ -23,26 +23,52 @@ int check_user_credentials(const char *userid, const char *password) {
     return 0;
 }
 
+//자산 찾기
+int get_user_asset(const char *userid) {
+    FILE *fp = fopen("data/asset_db.txt", "r");
+    if (!fp) return -1;
+
+    char line[100], file_id[50];
+    int money;
+    while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%[^:]:%d", file_id, &money) == 2) {
+            if (strcmp(userid, file_id) == 0) {
+                fclose(fp);
+                return money;
+            }
+        }
+    }
+
+    fclose(fp);
+    return -1; // 못 찾은 경우
+}
+
 void handle_login(int client_sock) {
-    LoginRequest req;
-    LoginResponse res;
+    while (1) {
+        LoginRequest req;
+        ssize_t recv_len = recv(client_sock, &req, sizeof(req), 0);
+        if (recv_len <= 0) {
+            printf("Client disconnected.\n");
+            break;
+        }
 
-    ssize_t recv_len = recv(client_sock, &req, sizeof(req), 0);
-    if (recv_len <= 0 || req.cmd != CMD_LOGIN_REQ) {
-        printf("Invalid login request.\n");
-        return;
+        if (req.cmd == CMD_LOGIN_REQ) {
+            LoginResponse res;
+            res.cmd = CMD_LOGIN_RES;
+
+            if (check_user_credentials(req.user_id, req.password)) {
+                res.success = 1;
+                res.money = get_user_asset(req.user_id);
+                snprintf(res.message, MAX_MSG_LEN, "Login success, welcome %s!", req.user_id);
+            } else {
+                res.success = 0;
+                res.money = 0;
+                snprintf(res.message, MAX_MSG_LEN, "Login failed.");
+            }
+
+            send(client_sock, &res, sizeof(res), 0);
+        } else {
+            // 아직 로그인 외 기능은 미지원 → 무시
+        }
     }
-
-    printf("Login attempt: ID=%s\n", req.user_id);
-
-    res.cmd = CMD_LOGIN_RES;
-    if (check_user_credentials(req.user_id, req.password)) {
-        res.success = 1;
-        snprintf(res.message, MAX_MSG_LEN, "Login success, welcome %s!", req.user_id);
-    } else {
-        res.success = 0;
-        snprintf(res.message, MAX_MSG_LEN, "Login failed.");
-    }
-
-    send(client_sock, &res, sizeof(res), 0);
 }
