@@ -30,6 +30,7 @@ typedef struct {
 typedef struct {
     CommandType cmd;
     int success;                    // 1=성공, 0=실패
+    int money;                      // 자산 정보
     char message[MAX_MSG_LEN];     // 상태 메시지
 } LoginResponse;
 
