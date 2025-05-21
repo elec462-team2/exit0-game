@@ -22,15 +22,15 @@ int perform_login(int sock) {
 
     ssize_t recv_len = recv(sock, &res, sizeof(res), 0);
     if (recv_len <= 0 || res.cmd != CMD_LOGIN_RES) {
-        printf("Login failed: server error\n");
-        return 0;
+        return -1;  // 서버 응답 이상
     }
 
+    // 자산 출력
     if (res.success) {
         printf("✅ %s\n", res.message);
-        return 1;
+        printf("💰 보유 자산: %d G\n", res.money);
+        return 1; // 성공
     } else {
-        printf("❌ %s\n", res.message);
-        return 0;
+        return 0; // 실패
     }
 }
