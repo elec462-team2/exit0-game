@@ -43,13 +43,13 @@ int get_user_asset(const char *userid) {
     return -1; // 못 찾은 경우
 }
 
-void handle_login(int client_sock) {
+int handle_login(int client_sock, char *user_id_buf) {
     while (1) {
         LoginRequest req;
         ssize_t recv_len = recv(client_sock, &req, sizeof(req), 0);
         if (recv_len <= 0) {
             printf("Client disconnected.\n");
-            break;
+            return 0;
         }
 
         if (req.cmd == CMD_LOGIN_REQ) {
@@ -60,15 +60,15 @@ void handle_login(int client_sock) {
                 res.success = 1;
                 res.money = get_user_asset(req.user_id);
                 snprintf(res.message, MAX_MSG_LEN, "Login success, welcome %s!", req.user_id);
+                strcpy(user_id_buf, req.user_id);
+                send(client_sock, &res, sizeof(res), 0);
+                return 1; // 로그인 성공
             } else {
                 res.success = 0;
                 res.money = 0;
                 snprintf(res.message, MAX_MSG_LEN, "Login failed.");
+                send(client_sock, &res, sizeof(res), 0);
             }
-
-            send(client_sock, &res, sizeof(res), 0);
-        } else {
-            // 아직 로그인 외 기능은 미지원 → 무시
         }
     }
 }
