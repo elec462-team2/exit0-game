@@ -6,6 +6,8 @@
 #include "../include/protocol.h"
 #include "../include/server_api.h"
 
+extern void handle_user_commands(int client_sock, const char *userid);
+
 void accept_and_fork(int serv_sock) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
@@ -17,7 +19,17 @@ void accept_and_fork(int serv_sock) {
         pid_t pid = fork();
         if (pid == 0) {
             close(serv_sock);
-            handle_login(client_sock);
+
+            char user_id_buf[MAX_ID_LEN] = {0};
+            int login_success = handle_login(client_sock, user_id_buf);
+
+            if (login_success == 1) {
+                printf("[SERVER] %s logged in successfully\n", user_id_buf);
+                handle_user_commands(client_sock, user_id_buf);
+            } else {
+                printf("[SERVER] Login failed or client disconnected\n");
+            }
+
             close(client_sock);
             exit(0);
         } else {
