@@ -4,10 +4,28 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "../include/protocol.h"
+#include "../include/server_api.h"
 
-extern void handle_login(int client_sock);
+void accept_and_fork(int serv_sock) {
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
 
-// 서버 소캣 생성
+    while (1) {
+        int client_sock = accept(serv_sock, (struct sockaddr*)&client_addr, &client_len);
+        if (client_sock < 0) continue;
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            close(serv_sock);
+            handle_login(client_sock);
+            close(client_sock);
+            exit(0);
+        } else {
+            close(client_sock);
+        }
+    }
+}
+
 int create_server_socket(int port) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
@@ -31,27 +49,6 @@ int create_server_socket(int port) {
     }
 
     return sock;
-}
-
-// 클라이언트 처리
-void accept_and_fork(int serv_sock) {
-    struct sockaddr_in client_addr;
-    socklen_t client_len = sizeof(client_addr);
-
-    while (1) {
-        int client_sock = accept(serv_sock, (struct sockaddr*)&client_addr, &client_len);
-        if (client_sock < 0) continue;
-
-        pid_t pid = fork();
-        if (pid == 0) {
-            close(serv_sock);
-            handle_login(client_sock);
-            close(client_sock);
-            exit(0);
-        } else {
-            close(client_sock);
-        }
-    }
 }
 
 int main(int argc, char *argv[]) {

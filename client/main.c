@@ -1,88 +1,139 @@
-#include <stdio.h>
-#include <string.h>
+#include <ncurses.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "../include/protocol.h"
 #include "../include/client_api.h"
 
-// 서버 연결
-int connect_to_server(const char *ip, int port) {
-    int sock;
-    struct sockaddr_in serv_addr;
+/* ====== TUI 초기/종료 ====== */
+static void init_ui(void)
+{
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(1);          /* 커서 보이기 (입력 필드용) */
+    start_color();
+    init_pair(1, COLOR_CYAN,   COLOR_BLACK);
+    init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+}
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1) {
-        perror("socket");
-        return -1;
+static void cleanup_ui(void)
+{
+    endwin();
+}
+
+/* ====== 네트워크 ====== */
+static int connect_to_server(const char *ip, int port)
+{
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) return -1;
+
+    struct sockaddr_in sa = {0};
+    sa.sin_family      = AF_INET;
+    sa.sin_port        = htons(port);
+    sa.sin_addr.s_addr = inet_addr(ip);
+
+    if (connect(sock, (struct sockaddr*)&sa, sizeof(sa)) < 0) {
+        close(sock); return -1;
     }
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-    serv_addr.sin_addr.s_addr = inet_addr(ip);
-
-    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
-        perror("connect");
-        close(sock);
-        return -1;
-    }
-
     return sock;
 }
 
-// 정상적인 종료 처리
-void graceful_exit(int sock) {
-    close(sock);
-    printf("👋 프로그램을 종료합니다.\n");
-    exit(0);
-}
-
-// 로그인 루프
-int login_loop(int sock) {
-    while (1) {
-        int login_result = perform_login(sock);
-
-        if (login_result == 1) return 1;
-        if (login_result == -1) {
-            printf("❌ 서버 응답 오류. 연결 종료합니다.\n");
-            return -1;
-        }
-
-        // 실패 시 재선택 루프
-        int choice = 0;
-        char input[10];
-        while (1) {
-            printf("\n❌ 로그인 실패\n");
-            printf("[1] 로그인 다시 시도\n");
-            printf("[2] 나가기\n");
-            printf("→ 선택: ");
-            fgets(input, sizeof(input), stdin);
-
-            if (strlen(input) == 2 && (input[0] == '1' || input[0] == '2')) {
-                choice = input[0] - '0';
-                break;
-            }
-            printf("⚠️ 1 또는 2만 정확히 입력해주세요.\n");
-        }
-
-        if (choice == 2) return 0;
+/* ====== UI 화면 ====== */
+static void show_welcome_screen(void)
+{
+    clear();
+    box(stdscr, 0, 0);
+    attron(COLOR_PAIR(1) | A_BOLD);
+    mvprintw(3, 4, "🎮  Welcome to the Game !");
+    attroff(A_BOLD);
+    attron(COLOR_PAIR(2));
+    mvprintw(5, 4, "Press <ENTER> to continue,  Ctrl+C / q  to quit.");
+    attroff(COLOR_PAIR(2));
+    refresh();
+    int ch;
+    while ((ch = getch()) != '\n' && ch != KEY_ENTER && ch != 'q');
+    if (ch == 'q') {
+        cleanup_ui();
+        exit(0);
     }
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <server_ip> <port>\n", argv[0]);
+static int show_main_menu(void)
+{
+    clear(); box(stdscr, 0, 0);
+    mvprintw(3, 4, "🧾  MAIN  MENU");
+    mvprintw(5, 6, "[1]  Register");
+    mvprintw(6, 6, "[2]  Login");
+    mvprintw(8, 4, "Select (1/2) : ");
+    refresh();
+
+    int ch;
+    while ((ch = getch()) != '1' && ch != '2');
+    return ch - '0';
+}
+
+/* ====== 로그인 루프 ====== */
+static int login_loop(int sock)
+{
+    while (1) {
+        int ok = perform_login(sock);
+        if (ok == 1) return 1;
+        if (ok == -1) return -1;  /* 통신 오류 */
+
+        /* 실패 시 옵션 */
+        clear(); box(stdscr, 0, 0);
+        mvprintw(3, 4, "❌  Login failed.");
+        mvprintw(5, 4, "[1] 재시도   [2] 나가기");
+        refresh();
+
+        int ch;
+        while ((ch = getch()) != '1' && ch != '2');
+        if (ch == '2') return 0;   /* 나가기 */
+    }
+}
+
+/* ====== 클라이언트 실행 ====== */
+void run_client(const char *ip, int port)
+{
+    int sock = connect_to_server(ip, port);
+    if (sock < 0) {
+        cleanup_ui();
+        fprintf(stderr, "Cannot connect to server.\n");
         exit(1);
     }
 
-    int sock = connect_to_server(argv[1], atoi(argv[2]));
-    if (sock < 0) exit(1);
+    show_welcome_screen();
 
-    int result = login_loop(sock);
-    if (result == 1) {
-        printf("🚀 로그인 성공! 이제 게임이나 채팅을 선택할 수 있어요.\n");
+    int choice = show_main_menu();
+    if (choice == 1) {                          /* Register */
+        if (!perform_register(sock)) {
+            close(sock); cleanup_ui(); exit(1);
+        }
     }
 
-    graceful_exit(sock);
+    if (!login_loop(sock)) {
+        close(sock); cleanup_ui(); exit(1);
+    }
+
+    clear(); box(stdscr, 0, 0);
+    mvprintw(3, 4, "🚀  Login success!  (TODO: game / chat menu)");
+    refresh(); getch();
+
+    close(sock);
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <server_ip> <port>\n", argv[0]);
+        return 1;
+    }
+
+    init_ui();
+    run_client(argv[1], atoi(argv[2]));
+    cleanup_ui();
     return 0;
 }

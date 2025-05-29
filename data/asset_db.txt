@@ -1,3 +1,5 @@
 admin:1000
 jiyun:750
 minji:1200
+glass00:0
+love:0
