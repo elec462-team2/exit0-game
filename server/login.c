@@ -5,7 +5,6 @@
 #include "../include/protocol.h"
 #include "../include/server_api.h"
 
-
 // 아이디+비번 일치 확인 (로그인용)
 int check_user_credentials(const char *userid, const char *password) {
     FILE *fp = fopen("data/user_db.txt", "r");
@@ -42,7 +41,7 @@ int check_user_id_exists(const char *userid) {
     return 0;
 }
 
-// 클라이언트 요청 처리
+// 클라이언트 요청 처리 (로그인/회원가입)
 void handle_login(int client_sock) {
     while (1) {
         RegisterRequest req;
@@ -82,7 +81,6 @@ void handle_login(int client_sock) {
                 fprintf(fp, "%s:%s\n", req.user_id, req.password);
                 fclose(fp);
 
-                // asset_db.txt에도 초기 자산 0 등록
                 FILE *afp = fopen("data/asset_db.txt", "a");
                 fprintf(afp, "%s:%d\n", req.user_id, 0);
                 fclose(afp);
@@ -98,7 +96,6 @@ void handle_login(int client_sock) {
 }
 
 // 자산 정보 가져오기
-// 자산 정보 가져오기
 int get_user_asset(const char *userid) {
     FILE *fp = fopen("data/asset_db.txt", "r");
     if (!fp) return 0;
@@ -113,7 +110,6 @@ int get_user_asset(const char *userid) {
             }
         }
     }
-
     fclose(fp);
-    return 0;  // 못 찾은 경우 기본값 0
+    return 0;
 }
