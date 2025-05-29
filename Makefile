@@ -7,6 +7,10 @@ SERVER_SRCS = server/main.c server/login.c
 CLIENT_EXEC = client_exec
 SERVER_EXEC = server_exec
 
+CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
+SERVER_OBJS = $(SERVER_SRCS:.c=.o)
+
+
 all: $(CLIENT_EXEC) $(SERVER_EXEC)
 
 $(CLIENT_EXEC): $(CLIENT_SRCS)
@@ -16,4 +20,4 @@ $(SERVER_EXEC): $(SERVER_SRCS)
 	$(CC) $(CFLAGS) -o $@ $(SERVER_SRCS)
 
 clean:
-	rm -f $(CLIENT_EXEC) $(SERVER_EXEC)
+	rm -f $(CLIENT_OBJS) $(SERVER_OBJS) $(CLIENT_EXEC) $(SERVER_EXEC)
