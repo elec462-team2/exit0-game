@@ -4,6 +4,11 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+#include "../include/protocol.h"
+
+// 🔥 함수 및 변수 선언
+void update_user_asset(const char *userid, int new_balance);
+extern char global_user_id[MAX_ID_LEN];
 
 #define MAX_INGREDIENTS 6
 #define MAX_ORDER 7
@@ -13,6 +18,8 @@ const char *ingredients[MAX_INGREDIENTS] = {
 };
 
 void start_burger_game(int *money) {
+    extern char global_user_id[MAX_ID_LEN];  // 유저 ID 전역변수 (client/main.c에 선언된 것)
+
     srand(time(NULL) ^ getpid());
     int running = 1;
 
@@ -95,4 +102,28 @@ void start_burger_game(int *money) {
     clear(); box(stdscr, 0, 0);
     mvprintw(4, 4, "Exiting Burger Game. See you again!");
     refresh(); getch();
+
+    update_user_asset(global_user_id, *money);
+
+}
+
+void update_user_asset(const char *userid, int new_balance) {
+    FILE *fp = fopen("data/asset_db.txt", "r");
+    if (!fp) return;
+    FILE *tmp = fopen("data/asset_tmp.txt", "w");
+    if (!tmp) { fclose(fp); return; }
+
+    char line[256], id[MAX_ID_LEN];
+    int money;
+    while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%49[^:]:%d", id, &money) == 2) {
+            if (strcmp(id, userid) == 0)
+                fprintf(tmp, "%s:%d\n", id, new_balance);
+            else
+                fputs(line, tmp);
+        }
+    }
+
+    fclose(fp); fclose(tmp);
+    rename("data/asset_tmp.txt", "data/asset_db.txt");
 }

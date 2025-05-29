@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include "../include/protocol.h"
 
+extern char global_user_id[MAX_ID_LEN];
+
 /* 내부 도움 함수 */
 static void prompt_field(int y, int x, const char *label,
                          char *buf, size_t maxlen, int hide)
@@ -55,6 +57,7 @@ int perform_login(int sock, int *user_money)
     clear(); box(stdscr, 0, 0);
     if (res.success) {
         *user_money = res.money; // 서버에서 받은 돈 저장
+        strcpy(global_user_id, req.user_id);  // ✅ ID 저장
         mvprintw(2, 2, "✅  %s", res.message);
         mvprintw(4, 2, "💰  Balance : %d G", res.money);
         refresh();

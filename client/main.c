@@ -7,6 +7,8 @@
 #include "../include/client_api.h"
 
 extern void start_burger_game(int *money);
+char global_user_id[MAX_ID_LEN] = {0};
+
 
 
 /* ====== TUI 초기/종료 ====== */
