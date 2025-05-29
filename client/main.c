@@ -6,6 +6,9 @@
 #include "../include/protocol.h"
 #include "../include/client_api.h"
 
+extern void start_burger_game(int *money);
+
+
 /* ====== TUI 초기/종료 ====== */
 static void init_ui(void)
 {
@@ -76,10 +79,10 @@ static int show_main_menu(void)
 }
 
 /* ====== 로그인 루프 ====== */
-static int login_loop(int sock)
+static int login_loop(int sock, int *user_money)
 {
     while (1) {
-        int ok = perform_login(sock);
+        int ok = perform_login(sock, user_money);
         if (ok == 1) return 1;
         if (ok == -1) return -1;  /* 통신 오류 */
 
@@ -96,9 +99,46 @@ static int login_loop(int sock)
 }
 
 /* ====== 클라이언트 실행 ====== */
-void run_client(const char *ip, int port)
-{
+// run_client() 위에 함수 선언 추가
+static int show_post_login_menu(void) {
+    clear(); box(stdscr, 0, 0);
+    mvprintw(2, 4, "🎯  What would you like to do?");
+    mvprintw(4, 6, "[1] Enter Casino");
+    mvprintw(5, 6, "[2] Enter Work Zone");
+    mvprintw(6, 6, "[3] View Ranking");
+    mvprintw(7, 6, "[4] Chat");
+    mvprintw(9, 4, "Select (1-4): ");
+    refresh();
+
+    int ch;
+    while ((ch = getch())) {
+        if (ch >= '1' && ch <= '4') return ch - '0';
+    }
+
+    return 0;
+}
+
+// 노동장 진입 후 노동 선택
+static int show_work_menu(void) {
+    clear(); box(stdscr, 0, 0);
+    mvprintw(2, 4, "Welcome to the Work Zone!");
+    mvprintw(4, 6, "[1] Burger Shop Part-time Job");
+    mvprintw(5, 6, "[2] Fish Sorting Part-time Job");
+    mvprintw(7, 4, "Select (1-2): ");
+    refresh();
+
+    int ch;
+    while ((ch = getch())) {
+        if (ch == '1' || ch == '2') return ch - '0';
+    }
+
+    return 0;
+}
+
+// run_client 함수
+void run_client(const char *ip, int port) {
     int sock = connect_to_server(ip, port);
+    int user_money = 0;
     if (sock < 0) {
         cleanup_ui();
         fprintf(stderr, "Cannot connect to server.\n");
@@ -114,16 +154,49 @@ void run_client(const char *ip, int port)
         }
     }
 
-    if (!login_loop(sock)) {
+    if (!login_loop(sock, &user_money)) {
         close(sock); cleanup_ui(); exit(1);
     }
 
-    clear(); box(stdscr, 0, 0);
-    mvprintw(3, 4, "🚀  Login success!  (TODO: game / chat menu)");
-    refresh(); getch();
+    while (1) {
+        
+        // 로그인 성공 후 메뉴 출력
+        choice = show_post_login_menu();
+
+        switch (choice) {
+            case 1:
+                mvprintw(12, 4, "Entering Casino... (TODO)");
+                refresh(); getch();
+                break;
+            case 2:
+                {
+                    // 노동장 -> 노동 방법 선택 
+                    int work_choice = show_work_menu();
+                    switch (work_choice) {
+                        case 1:
+                            start_burger_game(&user_money);
+                            break;
+                        case 2:
+                            mvprintw(12, 4, "Starting Fish Sorting Part-time... (TODO)");
+                            refresh(); getch();
+                            break;
+                    }
+                }
+                break;
+            case 3:
+                mvprintw(12, 4, "Viewing Ranking... (TODO)");
+                refresh(); getch();
+                break;
+            case 4:
+                mvprintw(12, 4, "Starting Chat... (TODO)");
+                refresh(); getch();
+                break;
+        }
+    }
 
     close(sock);
 }
+
 
 int main(int argc, char *argv[])
 {

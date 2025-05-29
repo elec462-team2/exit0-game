@@ -34,7 +34,7 @@ static void prompt_field(int y, int x, const char *label,
     clrtoeol();
 }
 
-int perform_login(int sock)
+int perform_login(int sock, int *user_money)
 {
     clear();
     box(stdscr, 0, 0);
@@ -54,6 +54,7 @@ int perform_login(int sock)
 
     clear(); box(stdscr, 0, 0);
     if (res.success) {
+        *user_money = res.money; // 서버에서 받은 돈 저장
         mvprintw(2, 2, "✅  %s", res.message);
         mvprintw(4, 2, "💰  Balance : %d G", res.money);
         refresh();
