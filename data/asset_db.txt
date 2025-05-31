@@ -1,4 +1,4 @@
-admin:1200
+admin:1100
 jiyun:2950
 minji:1200
 glass00:0

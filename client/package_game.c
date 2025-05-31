@@ -78,6 +78,9 @@ void start_package_game(int *money, int sock) {
             mvprintw(16, 2, "Correct! +100 points.");
         } else {
             *money -= 200;
+
+            if (*money < 0) *money = 0;
+            
             mvprintw(16, 2, "Wrong! -200 points.");
             mvprintw(17, 2, "The correct answer was: %c", regions[idx].center);
         }

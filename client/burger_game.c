@@ -85,6 +85,9 @@ void start_burger_game(int *money, int sock) {
         } else {
             int penalty = 200;
             *money -= penalty;
+
+            if (*money < 0) *money = 0;
+            
             mvprintw(4, 4, "❌ Wrong ingredients! The customer is upset.");
             mvprintw(6, 4, "[Penalty] -%d G (Total: %d G)", penalty, *money);
 
