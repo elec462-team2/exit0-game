@@ -109,10 +109,11 @@ int handle_login(int client_sock, char *user_id_buf) {
         }
     }
 }
-
+/*
 // 더미 코드 > 임시
 // 임시 구현: handle_user_commands()
 void handle_user_commands(int client_sock, const char *userid) {
     // TODO: 게임/채팅 기능 추가 예정
     printf("[SERVER] handle_user_commands() is not implemented yet!\n");
 }
+*/

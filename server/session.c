@@ -38,28 +38,24 @@ void update_user_asset(const char *userid, int new_balance) {
 }
 
 void handle_user_commands(int client_sock, const char *userid) {
-    int money = get_user_asset(userid);
-
     while (1) {
-        CommandType cmd;
-        ssize_t n = recv(client_sock, &cmd, sizeof(cmd), 0);
+        AssetUpdateRequest req;  // 구조체 전체 받기
+        ssize_t n = recv(client_sock, &req, sizeof(req), 0);
         if (n <= 0) break;
 
-        switch (cmd) {
-            case CMD_HIGHLOW_REQ:
-                handle_casino_game(client_sock, userid);
-                money = get_user_asset(userid);
-                update_user_asset(userid, money);
-                printf("[SERVER] %s asset saved after casino: %d\n", userid, money);
+        switch (req.cmd) {
+            case CMD_UPDATE_ASSET:
+                update_user_asset(req.user_id, req.money);
+                printf("[SERVER] %s asset updated: %d\n", req.user_id, req.money);
                 break;
 
             case CMD_LOGOUT_REQ:
-                money = get_user_asset(userid);
-                update_user_asset(userid, money);
-                printf("[SERVER] %s logged out; final asset=%d\n", userid, money);
+                update_user_asset(req.user_id, req.money);
+                printf("[SERVER] %s logged out; final asset=%d\n", req.user_id, req.money);
                 break;
 
             default:
+                printf("[SERVER] Unknown command received: %u\n", req.cmd);
                 break;
         }
     }

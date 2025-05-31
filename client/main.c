@@ -125,7 +125,7 @@ static int show_work_menu(void) {
     clear(); box(stdscr, 0, 0);
     mvprintw(2, 4, "Welcome to the Work Zone!");
     mvprintw(4, 6, "[1] Burger Shop Part-time Job");
-    mvprintw(5, 6, "[2] Fish Sorting Part-time Job");
+    mvprintw(5, 6, "[2] Package Sorting Part-time Job");
     mvprintw(7, 4, "Select (1-2): ");
     refresh();
 
@@ -179,8 +179,7 @@ void run_client(const char *ip, int port) {
                             start_burger_game(&user_money);
                             break;
                         case 2:
-                            mvprintw(12, 4, "Starting Fish Sorting Part-time... (TODO)");
-                            refresh(); getch();
+                            start_package_game(&user_money, sock);
                             break;
                     }
                 }
