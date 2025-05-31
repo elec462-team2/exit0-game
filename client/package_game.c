@@ -6,7 +6,8 @@
 #include <sys/socket.h>
 #include "../include/protocol.h"
 
-#define REGION_COUNT 20
+#define REGION_COUNT 18
+
 extern char global_user_id[MAX_ID_LEN];
 
 typedef struct {
@@ -35,7 +36,6 @@ void start_package_game(int *money, int sock) {
     cbreak();
     noecho();
     curs_set(1);
-    srand(time(NULL));
 
     while (1) {
         int idx = rand() % REGION_COUNT;

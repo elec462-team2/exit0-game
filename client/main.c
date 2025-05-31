@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include "../include/protocol.h"
 #include "../include/client_api.h"
 
-extern void start_burger_game(int *money);
+extern void start_burger_game(int *money, int sock);
 char global_user_id[MAX_ID_LEN] = {0};
 
 
@@ -176,7 +177,7 @@ void run_client(const char *ip, int port) {
                     int work_choice = show_work_menu();
                     switch (work_choice) {
                         case 1:
-                            start_burger_game(&user_money);
+                            start_burger_game(&user_money, sock);
                             break;
                         case 2:
                             start_package_game(&user_money, sock);
@@ -205,6 +206,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s <server_ip> <port>\n", argv[0]);
         return 1;
     }
+
+    srand(time(NULL));
 
     init_ui();
     run_client(argv[1], atoi(argv[2]));
