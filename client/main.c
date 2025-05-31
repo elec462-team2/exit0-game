@@ -8,6 +8,7 @@
 #include "../include/client_api.h"
 
 extern void start_burger_game(int *money, int sock);
+void show_ranking();
 char global_user_id[MAX_ID_LEN] = {0};
 
 
@@ -110,12 +111,14 @@ static int show_post_login_menu(void) {
     mvprintw(5, 6, "[2] Enter Work Zone");
     mvprintw(6, 6, "[3] View Ranking");
     mvprintw(7, 6, "[4] Chat");
-    mvprintw(9, 4, "Select (1-4): ");
+    mvprintw(8, 6, "[q] Logout and Exit");  // 🔥 추가
+    mvprintw(10, 4, "Select an option: ");
     refresh();
 
     int ch;
     while ((ch = getch())) {
         if (ch >= '1' && ch <= '4') return ch - '0';
+        if (ch == 'q' || ch == 'Q') return -1;  // q 입력 처리
     }
 
     return 0;
@@ -165,6 +168,17 @@ void run_client(const char *ip, int port) {
         
         // 로그인 성공 후 메뉴 출력
         choice = show_post_login_menu();
+        if (choice == -1) {  // q 입력 처리
+            AssetUpdateRequest req = { .cmd = CMD_UPDATE_ASSET };
+            strcpy(req.user_id, global_user_id);
+            req.money = user_money;
+            send(sock, &req, sizeof(req), 0);
+
+            mvprintw(12, 4, "Logging out... Goodbye!");
+            refresh();
+            getch();
+            break;
+        }
 
         switch (choice) {
             case 1:
@@ -186,8 +200,7 @@ void run_client(const char *ip, int port) {
                 }
                 break;
             case 3:
-                mvprintw(12, 4, "Viewing Ranking... (TODO)");
-                refresh(); getch();
+                show_ranking();
                 break;
             case 4:
                 mvprintw(12, 4, "Starting Chat... (TODO)");
