@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <locale.h>
 #include "../include/protocol.h"
 #include "../include/client_api.h"
 
@@ -215,6 +216,7 @@ void run_client(const char *ip, int port) {
 
 int main(int argc, char *argv[])
 {
+    setlocale(LC_ALL, "");
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <server_ip> <port>\n", argv[0]);
         return 1;

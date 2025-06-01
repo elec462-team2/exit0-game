@@ -1,5 +1,5 @@
-admin:1600
-jiyun:2950
+admin:2300
+jiyun:3450
 minji:1200
 glass00:0
 love:0
