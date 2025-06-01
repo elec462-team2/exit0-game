@@ -11,6 +11,7 @@
 extern int handle_login(int client_sock, char *user_id_buf);
 extern void handle_casino_game(int client_sock, const char *userid);
 extern int  get_user_asset(const char *userid);
+extern void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd);
 
 void update_user_asset(const char *userid, int new_balance) {
     FILE *fp = fopen("data/asset_db.txt", "r");
@@ -52,6 +53,14 @@ void handle_user_commands(int client_sock, const char *userid) {
                 money = get_user_asset(userid);
                 update_user_asset(userid, money);
                 printf("[SERVER] %s logged out; final asset=%d\n", userid, money);
+                break;
+
+            case CMD_BLACKJACK_REQ:
+            case CMD_BLACKJACK_HIT:
+            case CMD_BLACKJACK_RESULT:
+                handle_blackjack_game(client_sock, userid, cmd);
+                money = get_user_asset(userid);
+                update_user_asset(userid, money);
                 break;
 
             default:
