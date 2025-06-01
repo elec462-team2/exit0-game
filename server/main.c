@@ -4,8 +4,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "../include/protocol.h"
+#include "../include/server_api.h"
 
-extern void handle_login(int client_sock);
+extern int handle_login(int client_sock, char *user_id_buf);  // 로그인 성공 시 user_id 저장
+extern void handle_user_commands(int client_sock, const char *userid);  // 이후 명령 핸들링
 
 // 서버 소캣 생성
 int create_server_socket(int port) {
@@ -45,7 +47,17 @@ void accept_and_fork(int serv_sock) {
         pid_t pid = fork();
         if (pid == 0) {
             close(serv_sock);
-            handle_login(client_sock);
+
+            char user_id_buf[MAX_ID_LEN] = {0};
+            int login_success = handle_login(client_sock, user_id_buf);
+
+            if (login_success == 1) {
+                printf("[SERVER] %s logged in successfully\n", user_id_buf);
+                handle_user_commands(client_sock, user_id_buf);
+            } else {
+                printf("[SERVER] Login failed or client disconnected\n");
+            }
+
             close(client_sock);
             exit(0);
         } else {

@@ -1,3 +1,5 @@
+//include/protocol.h
+#include <stdint.h>
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
 
@@ -5,53 +7,84 @@
 #define MAX_PW_LEN      20
 #define MAX_MSG_LEN     256
 
-// 명령 종류
-typedef enum {
-    CMD_LOGIN_REQ = 1,      // 로그인 요청
-    CMD_LOGIN_RES,          // 로그인 응답
-    CMD_CHAT_MSG,           // 채팅 메시지
-    CMD_CHAT_BROADCAST,     // 채팅 브로드캐스트
-    CMD_GAME_REQ,           // 게임 요청 (노동 or 도박)
-    CMD_GAME_RES,           // 게임 결과 응답
-    CMD_RANK_REQ,           // 랭킹 요청
-    CMD_RANK_RES,           // 랭킹 응답
-    CMD_LOGOUT_REQ,         // 로그아웃 요청
-    CMD_LOGOUT_RES          // 로그아웃 완료
-} CommandType;
+typedef uint32_t CommandType;
 
-// 로그인 요청 패킷
+// 명령 코드 정의 (define으로 대체)
+#define CMD_LOGIN_REQ     1
+#define CMD_LOGIN_RES     2
+#define CMD_HIGHLOW_REQ   3
+#define CMD_HIGHLOW_RES   4
+#define CMD_UPDATE_ASSET  5
+#define CMD_ASSET_RES     6
+#define CMD_LOGOUT_REQ    7
+#define CMD_LOGOUT_RES    8
+#define CMD_BLACKJACK_REQ     9   // 게임 시작
+#define CMD_BLACKJACK_HIT    10   // 플레이어 hit 요청
+#define CMD_BLACKJACK_RESULT 11   // stand 이후 결과 요청
+#define CMD_BLACKJACK_RES    12   // 응답 통합
+
+
+
+// 로그인 요청
 typedef struct {
     CommandType cmd;
     char user_id[MAX_ID_LEN];
     char password[MAX_PW_LEN];
 } LoginRequest;
 
-// 로그인 응답 패킷
+// 로그인 응답
 typedef struct {
     CommandType cmd;
-    int success;                    // 1=성공, 0=실패
-    int money;                      // 자산 정보
-    char message[MAX_MSG_LEN];     // 상태 메시지
+    int success;
+    int money;
+    char message[MAX_MSG_LEN];
 } LoginResponse;
 
-// 채팅 메시지
+// 하이앤로우 요청
+typedef struct {
+    CommandType cmd;        // 반드시 4바이트 고정형
+    int  bet;        // 4바이트
+    int  guess_num;  // 4바이트
+} HighLowRequest;
+
+// 하이앤로우 응답
 typedef struct {
     CommandType cmd;
-    char sender[MAX_ID_LEN];
-    char message[MAX_MSG_LEN];
-} ChatMessage;
+    int my_num;
+    int cpu_num;
+    int win;
+    int new_money;
+    int bet;
+    int guess_num;
+} HighLowResponse;
 
-// 게임 결과 응답
 typedef struct {
     CommandType cmd;
-    int new_money;                 // 결과 반영 후 돈
-    char result_msg[MAX_MSG_LEN]; // 예: "노동에 성공하여 100G 획득!"
-} GameResponse;
+    int bet;
+} BlackjackRequest;
 
-// 랭킹 데이터 (복수 전송될 수 있음)
 typedef struct {
+    CommandType cmd;
+    int player_score;
+    int dealer_score;
+    int win;        // 0: lose, 1: win, 2: push
+    int bet;
+    int new_money;
+    int is_final;   // 1이면 최종 결과 (stand 이후)
+} BlackjackResponse;
+
+// 자산 요청
+typedef struct {
+    CommandType cmd;
     char user_id[MAX_ID_LEN];
     int money;
-} RankEntry;
+} AssetUpdateRequest;
+
+// 자산 응답
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+    int money;
+} AssetResponse;
 
 #endif // __PROTOCOL_H__

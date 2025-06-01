@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include "../include/protocol.h"
 
-int perform_login(int sock) {
+int perform_login(int sock, char *user_id, int *user_money) {
     LoginRequest req;
     LoginResponse res;
 
@@ -27,9 +27,9 @@ int perform_login(int sock) {
 
     // 자산 출력
     if (res.success) {
-        printf("✅ %s\n", res.message);
-        printf("💰 보유 자산: %d G\n", res.money);
-        return 1; // 성공
+        printf("🚀 로그인 성공! 현재 자산: %d G\n", res.money);
+        *user_money = res.money;  // 여기에 반영
+    return 1;
     } else {
         return 0; // 실패
     }
