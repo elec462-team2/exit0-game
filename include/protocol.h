@@ -1,3 +1,4 @@
+//include/protocol.h
 #include <stdint.h>
 #ifndef __PROTOCOL_H__
 #define __PROTOCOL_H__
@@ -17,6 +18,11 @@ typedef uint32_t CommandType;
 #define CMD_ASSET_RES     6
 #define CMD_LOGOUT_REQ    7
 #define CMD_LOGOUT_RES    8
+#define CMD_BLACKJACK_REQ     9   // 게임 시작
+#define CMD_BLACKJACK_HIT    10   // 플레이어 hit 요청
+#define CMD_BLACKJACK_RESULT 11   // stand 이후 결과 요청
+#define CMD_BLACKJACK_RES    12   // 응답 통합
+
 
 
 // 로그인 요청
@@ -51,6 +57,21 @@ typedef struct {
     int bet;
     int guess_num;
 } HighLowResponse;
+
+typedef struct {
+    CommandType cmd;
+    int bet;
+} BlackjackRequest;
+
+typedef struct {
+    CommandType cmd;
+    int player_score;
+    int dealer_score;
+    int win;        // 0: lose, 1: win, 2: push
+    int bet;
+    int new_money;
+    int is_final;   // 1이면 최종 결과 (stand 이후)
+} BlackjackResponse;
 
 // 자산 요청
 typedef struct {
