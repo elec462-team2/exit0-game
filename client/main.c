@@ -8,6 +8,7 @@
 #include "../include/protocol.h"
 #include "../include/client_api.h"
 
+extern void start_casino_game(int sock, int *user_money);
 extern void start_burger_game(int *money, int sock);
 void show_ranking();
 char global_user_id[MAX_ID_LEN] = {0};
@@ -183,8 +184,7 @@ void run_client(const char *ip, int port) {
 
         switch (choice) {
             case 1:
-                mvprintw(12, 4, "Entering Casino... (TODO)");
-                refresh(); getch();
+                start_casino_game(sock, &user_money);
                 break;
             case 2:
                 {

@@ -11,12 +11,9 @@
 
 extern int handle_login(int client_sock, char *user_id_buf);
 extern int  get_user_asset(const char *userid);
+extern void handle_casino_game(int client_sock, const char *userid);
 
-// 필요 없으면 주석처리하거나 빈 함수
-void handle_casino_game(int client_sock, const char *userid) {
-    // Do nothing or implement if necessary
-    printf("[SERVER] Casino game not implemented on server side.\n");
-}
+
 
 void update_user_asset(const char *userid, int new_balance) {
     FILE *fp = fopen("data/asset_db.txt", "r");
@@ -59,12 +56,20 @@ void update_user_asset(const char *userid, int new_balance) {
 
 
 void handle_user_commands(int client_sock, const char *userid) {
+    int money = get_user_asset(userid);
+
     while (1) {
         AssetUpdateRequest req;  // 구조체 전체 받기
         ssize_t n = recv(client_sock, &req, sizeof(req), 0);
         if (n <= 0) break;
 
         switch (req.cmd) {
+            case CMD_HIGHLOW_REQ:
+                handle_casino_game(client_sock, userid);
+                money = get_user_asset(userid);
+                update_user_asset(userid, money);
+                printf("[SERVER] %s asset saved after casino: %d\n", userid, money);
+                break;
             case CMD_UPDATE_ASSET:
                 update_user_asset(req.user_id, req.money);
                 printf("[SERVER] %s asset updated: %d\n", req.user_id, req.money);
