@@ -1,4 +1,5 @@
-#include <ncurses.h>
+//client/main.c
+#include <ncursesw/ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -10,6 +11,7 @@
 
 extern void start_casino_game(int sock, int *user_money);
 extern void start_burger_game(int *money, int sock);
+extern void enter_chat_menu(int sock);
 void show_ranking();
 char global_user_id[MAX_ID_LEN] = {0};
 
@@ -205,6 +207,9 @@ void run_client(const char *ip, int port) {
                 show_ranking();
                 break;
             case 4:
+                enter_chat_menu(sock);
+                break;
+            case 5:
                 mvprintw(12, 4, "Starting Chat... (TODO)");
                 refresh(); getch();
                 break;
