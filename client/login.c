@@ -1,36 +1,106 @@
-#include <stdio.h>
+#include <ncurses.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include "../include/protocol.h"
 
-int perform_login(int sock, char *user_id, int *user_money) {
-    LoginRequest req;
+extern char global_user_id[MAX_ID_LEN];
+
+/* 내부 도움 함수 */
+static void prompt_field(int y, int x, const char *label,
+                         char *buf, size_t maxlen, int hide)
+{
+    mvprintw(y, x, "%s", label);
+    move(y, x + (int)strlen(label));
+    if (hide) {
+        /* 비밀번호 입력: 화면에 별표 출력 */
+        noecho();
+        int idx = 0, ch;
+        while ((ch = getch()) != '\n' && idx < (int)maxlen - 1) {
+            if (ch == KEY_BACKSPACE || ch == 127) {
+                if (idx) {
+                    idx--; mvaddch(y, x + (int)strlen(label) + idx, ' ');
+                    move(y, x + (int)strlen(label) + idx);
+                }
+            } else {
+                buf[idx++] = (char)ch;
+                addch('*');
+            }
+        }
+        buf[idx] = '\0';
+        echo();
+    } else {
+        echo();
+        getnstr(buf, (int)maxlen - 1);
+    }
+    clrtoeol();
+}
+
+int perform_login(int sock, int *user_money)
+{
+    clear();
+    box(stdscr, 0, 0);
+    mvprintw(1, 2, "🔐  LOGIN");
+    refresh();
+
+    LoginRequest  req = { .cmd = CMD_LOGIN_REQ };
     LoginResponse res;
 
-    req.cmd = CMD_LOGIN_REQ;
-
-    printf("Enter ID: ");
-    fgets(req.user_id, MAX_ID_LEN, stdin);
-    req.user_id[strcspn(req.user_id, "\n")] = '\0';
-
-    printf("Enter Password: ");
-    fgets(req.password, MAX_PW_LEN, stdin);
-    req.password[strcspn(req.password, "\n")] = '\0';
+    prompt_field(3, 2, "ID        : ", req.user_id, MAX_ID_LEN, 0);
+    prompt_field(4, 2, "Password  : ", req.password, MAX_PW_LEN, 1);
 
     send(sock, &req, sizeof(req), 0);
 
-    ssize_t recv_len = recv(sock, &res, sizeof(res), 0);
-    if (recv_len <= 0 || res.cmd != CMD_LOGIN_RES) {
-        return -1;  // 서버 응답 이상
+    ssize_t n = recv(sock, &res, sizeof(res), 0);
+    if (n <= 0 || res.cmd != CMD_LOGIN_RES) return -1;
+
+    clear(); box(stdscr, 0, 0);
+    if (res.success) {
+        *user_money = res.money; // 서버에서 받은 돈 저장
+        strcpy(global_user_id, req.user_id);  // ✅ ID 저장
+        mvprintw(2, 2, "✅  %s", res.message);
+        mvprintw(4, 2, "💰  Balance : %d G", res.money);
+        refresh();
+        getch();
+        return 1;
+    }
+    mvprintw(2, 2, "❌  Login failed.");
+    refresh();
+    getch();
+    return 0;
+}
+
+int perform_register(int sock)
+{
+    RegisterRequest  req = { .cmd = CMD_REGISTER_REQ };
+    RegisterResponse res;
+
+    /* ------ ① ID 중복 확인 ------ */
+    while (1) {
+        clear(); box(stdscr, 0, 0);
+        mvprintw(1, 2, "🆕  REGISTER  (4~10 영문/숫자)");
+        prompt_field(3, 2, "New ID : ", req.user_id, MAX_ID_LEN, 0);
+
+        memset(req.password, 0, sizeof(req.password));     /* 첫 요청엔 비번 X */
+        send(sock, &req, sizeof(req), 0);
+        recv(sock, &res, sizeof(res), 0);
+
+        if (res.success) {
+            mvprintw(5, 2, "✅  %s", res.message);
+            refresh(); getch();
+            break;
+        }
+        mvprintw(5, 2, "❌  %s", res.message);
+        refresh(); getch();
     }
 
-    // 자산 출력
-    if (res.success) {
-        printf("🚀 로그인 성공! 현재 자산: %d G\n", res.money);
-        *user_money = res.money;  // 여기에 반영
-    return 1;
-    } else {
-        return 0; // 실패
-    }
+    /* ------ ② 최종 등록 ------ */
+    prompt_field(5, 2, "Password (6~12) : ", req.password, MAX_PW_LEN, 1);
+    send(sock, &req, sizeof(req), 0);
+    recv(sock, &res, sizeof(res), 0);
+
+    clear(); box(stdscr, 0, 0);
+    mvprintw(2, 2, "%s", res.message);
+    refresh(); getch();
+    return res.success;
 }
