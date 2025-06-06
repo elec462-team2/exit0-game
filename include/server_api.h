@@ -1,3 +1,4 @@
+//include/server_api.h
 #ifndef __SERVER_API_H__
 #define __SERVER_API_H__
 
@@ -15,6 +16,6 @@ void handle_labor_game(int client_sock, const char *userid);
 void handle_casino_game(int client_sock, const char *userid);
 
 // 채팅
-void handle_chat(int client_sock, const char *userid);
+void handle_chat(int client_sock, const char *userid, CommandType cmd);
 
 #endif // __SERVER_API_H__

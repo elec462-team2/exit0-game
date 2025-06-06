@@ -1,9 +1,11 @@
+//include/client_api.h
 #ifndef __CLIENT_API_H__
 #define __CLIENT_API_H__
 
 // 로그인
 int  perform_login(int sock, int *user_money);
 int  perform_register(int sock);
+void enter_chat_menu(int sock);
 
 // 게임
 void run_client(const char *ip, int port);
