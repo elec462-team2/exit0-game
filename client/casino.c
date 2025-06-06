@@ -2,32 +2,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <ncurses.h>
+#include <locale.h>
 #include <signal.h>
 #include "../include/protocol.h"
-
-static int max_y, max_x;
 
 static const char *big_digits[10][5] = {
     { " *** ", "*   *", "*   *", "*   *", " *** " },
     { "  *  ", " **  ", "  *  ", "  *  ", " *** " },
     { " *** ", "    *", " *** ", "*    ", "*****" },
     { "**** ", "    *", " *** ", "    *", "**** " },
-    { "*  * ", "*  * ", "*****", "   * ", "   * " },
+    { "*  * ", "*  * ", "*****", "   * ", "   * " },    
     { "*****", "*    ", "**** ", "    *", "**** " },
     { " *** ", "*    ", "**** ", "*   *", " *** " },
     { "*****", "   * ", "  *  ", " *   ", " *   " },
     { " *** ", "*   *", " *** ", "*   *", " *** " },
     { " *** ", "*   *", " ****", "    *", " *** " },
 };
-
-static void handle_resize(int sig) {
-    endwin(); refresh(); clear();
-    getmaxyx(stdscr, max_y, max_x);
-}
 
 static void draw_big_number(int num, int row, int col) {
     char s[16];
@@ -41,14 +34,10 @@ static void draw_big_number(int num, int row, int col) {
 }
 
 void play_race_game(int sock, int *money) {
-    initscr(); noecho(); cbreak(); curs_set(0);
-    keypad(stdscr, TRUE);
-
-    echo();
     char buf[16];
     int choice = -1, bet = 0;
 
-    clear(); box(stdscr, 0, 0);
+    echo(); clear(); box(stdscr, 0, 0);
     mvprintw(2, 5, "**Welcome to Horse Racing!**");
     mvprintw(4, 5, "Choose your champion and place your bet.");
     mvprintw(6, 5, "Your bank: [%dG]", *money);
@@ -57,21 +46,21 @@ void play_race_game(int sock, int *money) {
     mvprintw(9, 35, "(>.<) : 40%% & x2.5");
     mvprintw(10, 35, "(-_-) : 20%% & x5");
     mvprintw(12, 5, "Choose your horse (0: (^_^) 1: (>.<), 2: (-_-) : ");
-    getstr(buf); choice = atoi(buf);
+    getstr(buf); choice = atoi(buf);    
 
     if (choice < 0 || choice > 2) {
         mvprintw(14, 5, "Invalid horse selection. Press any key.");
-        getch(); endwin(); return;
+        getch(); return;
     }
 
     mvprintw(14, 5, "Enter bet: ");
     getstr(buf); bet = atoi(buf);
-
+    
     if (bet <= 0 || bet > *money) {
         mvprintw(16, 5, "Invalid bet. Press any key.");
-        getch(); endwin(); return;
+        getch(); return;
     }
-
+    noecho();
     CommandType cmd = CMD_RACE_REQ;
     send(sock, &cmd, sizeof(cmd), 0);
     RaceRequest req = { .cmd = CMD_RACE_REQ, .selected_horse = choice, .bet = bet };
@@ -108,21 +97,14 @@ void play_race_game(int sock, int *money) {
     *money = res.new_money;
 
     mvprintw(20, 5, "Press any key to continue...");
-    getch(); endwin();
+    refresh(); getch();
 }
 
 void play_blackjack_game(int sock, int *money) {
-    initscr(); noecho(); cbreak(); curs_set(0);
-    keypad(stdscr, TRUE);
-    signal(SIGWINCH, handle_resize);
-    getmaxyx(stdscr, max_y, max_x);
-    srand(time(NULL) ^ getpid());
-
-    echo();
     char buf[16];
     int bet = 0;
 
-    clear(); box(stdscr, 0, 0);
+    echo(); clear(); box(stdscr, 0, 0);
     mvprintw(2, 5, "**Welcome to Blackjack Table!**");
     mvprintw(4, 5, "Try to beat the dealer. Don’t go over 21!");
     mvprintw(6, 5, "Your bank : [%dG]", *money);
@@ -132,7 +114,7 @@ void play_blackjack_game(int sock, int *money) {
 
     if (bet <= 0 || bet > *money) {
         mvprintw(10, 5, "Invalid bet. Press any key.");
-        getch(); endwin(); return;
+        getch(); return;
     }
 
     // 서버로 게임 시작 요청s
@@ -162,15 +144,13 @@ void play_blackjack_game(int sock, int *money) {
             recv(sock, &res, sizeof(res), 0);
             player_score = res.player_score;
 
-            if (res.is_final) break;  // bust 처리
+            if (res.is_final) break;
 
-        } else if (choice == 's') {
-            cmd = CMD_BLACKJACK_RESULT;
-            send(sock, &cmd, sizeof(cmd), 0);
-            recv(sock, &res, sizeof(res), 0);
-            break;
-        }
+        } else if (choice == 's') break;
     }
+    cmd = CMD_BLACKJACK_RESULT;
+    send(sock, &cmd, sizeof(cmd), 0);
+    recv(sock, &res, sizeof(res), 0);
 
     // 최종 결과 화면
     clear(); box(stdscr, 0, 0);
@@ -209,15 +189,10 @@ void play_blackjack_game(int sock, int *money) {
     mvprintw(drow + 2, 5, "(Result: %s)", res.win == 1 ? "You WIN!" : (res.win == 2 ? "Push." : "You LOSE!"));
     mvprintw(drow + 4, 5, "Final bank: %dG", *money);
     mvprintw(drow + 6, 5, "Press any key to return.");
-    refresh(); getch(); endwin();
+    refresh(); getch();
 }
 
 void play_highlow_game(int sock, int *money) {
-    initscr(); noecho(); cbreak(); curs_set(0);
-    keypad(stdscr, TRUE);
-    signal(SIGWINCH, handle_resize);
-    getmaxyx(stdscr, max_y, max_x);
-
     echo();
     char buf[32];
     int bet = 0;
@@ -225,7 +200,7 @@ void play_highlow_game(int sock, int *money) {
 
     // 1) TUI로 배팅 입력
     clear(); box(stdscr,0,0);
-    mvprintw(2, 5, "**Welcome to High & Low Game!**");
+    mvprintw(2, 5, "**Welcome to High & Low Game!**안녕하세요!🐕");
     mvprintw(4, 5, "Guess whether the next number is HIGH or LOW.");
     mvprintw(6,5,"Your bank : [%dG]", *money);
     mvprintw(8,5,"Enter bet : ");
@@ -234,20 +209,18 @@ void play_highlow_game(int sock, int *money) {
     if (bet <= 0 || bet > *money) {
         mvprintw(10,5,"Invalid bet. Press any key.");
         getch();
-        endwin();
         return;
     }
 
     // 2) TUI로 H/L 입력
     mvprintw(10,5,"Guess [h] HIGH or [l] LOW: ");
-    refresh();
-    flushinp(); 
-    guess = getch();
+    getstr(buf);
     noecho();
+    refresh();
+    guess = buf[0];
     if (guess != 'h' && guess != 'l') {
         mvprintw(12,5,"Invalid choice. Press any key.");
         getch();
-        endwin();
         return;
     }
 
@@ -268,7 +241,6 @@ void play_highlow_game(int sock, int *money) {
     HighLowResponse res;
     int n = recv(sock, &res, sizeof(res), 0);
     if (n <= 0 || res.cmd != CMD_HIGHLOW_RES) {
-        endwin();
         return;
     }
     clear(); box(stdscr, 0, 0);
@@ -277,40 +249,70 @@ void play_highlow_game(int sock, int *money) {
     mvprintw(10, 5, "Your guess : %c", res.guess_num == 1 ? 'H' : 'L');
     mvprintw(12, 5, "Result : %s (%c%dG)    After your bank : %dG", res.win?"WIN":"LOSE", res.win?'+':'-', res.bet, res.new_money);
     mvprintw(16, 5, "Press any key");
-    refresh();
 
     *money = res.new_money;
 
     // 5) 아무 키나 누르면 종료
-    getch();
-
-    endwin();
+    refresh(); getch();
 }
 
 void start_casino_game(int sock, int *user_money) {
+    int choice = 0;
     while (1) {
-        if (user_money < 1){
-            printf("You don't have enough money to play game!");
+        clear();
+        box(stdscr, 0, 0);
+        mvprintw(1, 2, "🎰 Welcome to the Casino 🎰");
+
+        if (*user_money < 1) {
+            mvprintw(3, 2, "You don't have enough money to play a game!");
+            mvprintw(5, 2, "Press any key to return to the lobby...");
+            refresh();
+            getch();
             return;
         }
-        printf("\n[ Casino Main ]\n"
-               "[1] High & Low Game\n"
-               "[2] View Rules\n"
-               "[3] Blackjack Game\n"
-               "[4] Exit to Lobby\n"
-               "[5] Play Race Game\n"
-               "→ choice: ");
-        int m; scanf("%d", &m); getchar();
 
-        if (m == 2) {
-            printf("Rules:\n - High & Low: Guess higher/lower.\n");
-            printf(" - Blackjack: Try to get closer to 21 than dealer.\n");
-            continue;
+        mvprintw(3, 2, "Your Money: $%d", *user_money);
+        mvprintw(5, 2, "[1] High & Low Game");
+        mvprintw(6, 2, "[2] Blackjack Game");
+        mvprintw(7, 2, "[3] Play Race Game");
+        mvprintw(8, 2, "[4] View Rules");
+        mvprintw(9, 2, "[5] Exit to Lobby");
+        mvprintw(11, 2, "→ Enter your choice: ");
+        char buf[8];
+        echo();
+        getstr(buf);
+        noecho();
+        refresh();
+
+        choice = atoi(buf);
+        switch (choice) {
+            case 1:
+                play_highlow_game(sock, user_money);
+                break;
+            case 2:
+                play_blackjack_game(sock, user_money);
+                break;
+            case 3:
+                play_race_game(sock, user_money);
+                break;
+            case 4:
+                clear();
+                box(stdscr, 0, 0);
+                mvprintw(1, 2, "[ Game Rules ]");
+                mvprintw(3, 2, "- High & Low: Guess whether next number is higher or lower.");
+                mvprintw(4, 2, "- Blackjack: Get closer to 21 than the dealer.");
+                mvprintw(5, 2, "- Race: Pick a horse, and if it wins, you get rewards!");
+                mvprintw(7, 2, "Press any key to return...");
+                refresh();
+                getch();
+                break;
+            case 5:
+                return;
+            default:
+                mvprintw(13, 2, "Invalid choice. Press any key to try again.");
+                refresh();
+                getch();
+                break;
         }
-        if (m == 4) return;
-        if (m == 1) play_highlow_game(sock, user_money);
-        else if (m == 3) play_blackjack_game(sock, user_money);
-        else if (m == 5) play_race_game(sock, user_money);
-        else printf("Invalid.\n");
     }
 }
