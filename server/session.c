@@ -13,6 +13,7 @@ extern void handle_casino_game(int client_sock, const char *userid);
 extern int  get_user_asset(const char *userid);
 extern void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd);
 extern void handle_race_game(int client_sock, const char *userid);
+extern void handle_chat(int client_sock, const char *userid, CommandType cmd);
 
 void update_user_asset(const char *userid, int new_balance) {
     FILE *fp = fopen("data/asset_db.txt", "r");
@@ -66,6 +67,11 @@ void handle_user_commands(int client_sock, const char *userid) {
 
             case CMD_RACE_REQ:
                 handle_race_game(client_sock, userid);
+                break;
+
+            case CMD_CHAT_INBOX_REQ:
+            case CMD_CHAT_SEND_REQ:
+                handle_chat(client_sock, userid, cmd);
                 break;
 
             default:
