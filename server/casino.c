@@ -21,7 +21,6 @@ typedef struct {
     int finished;
 } BlackjackSession;
 
-
 void handle_race_game(int client_sock, const char *userid) {
     RaceRequest req;
     recv(client_sock, &req, sizeof(req), 0);
@@ -174,7 +173,6 @@ void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd)
     }
 }
 
-// 하이 앤 로우
 void handle_casino_game(int client_sock, const char *userid) {
     HighLowRequest req;
     ssize_t len = recv(client_sock, &req, sizeof(req), 0);
@@ -185,8 +183,12 @@ void handle_casino_game(int client_sock, const char *userid) {
 
 
     srand(time(NULL) ^ getpid());
-    int my  = rand() % 100;
-    int cpu = rand() % 100;
+    int my, cpu;
+    while(1){
+        my  = rand() % 100;
+        cpu = rand() % 100;
+        if (my != cpu) break;
+    }
     int win = (req.guess_num==1 && my>cpu) || (req.guess_num==0 && my<cpu);
     int cur = get_user_asset(userid);
     int upd = win ? cur + req.bet : cur - req.bet;
