@@ -5,6 +5,7 @@
 int handle_login(int client_sock, char *user_id_buf);
 int check_user_credentials(const char *userid, const char *password);
 
+
 // 자산 조회·업데이트
 int  get_user_asset(const char *userid);
 void update_user_asset(const char *userid, int new_balance);

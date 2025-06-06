@@ -10,19 +10,21 @@
 
 #define CMD_LOGIN_REQ     1
 #define CMD_LOGIN_RES     2
-#define CMD_HIGHLOW_REQ   3
-#define CMD_HIGHLOW_RES   4
+#define CMD_REGISTER_REQ  3
+#define CMD_REGISTER_RES  4
 #define CMD_UPDATE_ASSET  5
 #define CMD_ASSET_RES     6
 #define CMD_LOGOUT_REQ    7
 #define CMD_LOGOUT_RES    8
-#define CMD_BLACKJACK_REQ     9
-#define CMD_BLACKJACK_HIT    10
-#define CMD_BLACKJACK_RESULT 11
-#define CMD_BLACKJACK_RES    12
-#define CMD_RACE_REQ  13
-#define CMD_RACE_STEP 14
-#define CMD_RACE_END 22
+#define CMD_HIGHLOW_REQ   9
+#define CMD_HIGHLOW_RES   10
+#define CMD_BLACKJACK_REQ    11
+#define CMD_BLACKJACK_HIT    12
+#define CMD_BLACKJACK_RESULT 13
+#define CMD_BLACKJACK_RES    14
+#define CMD_RACE_REQ  15
+#define CMD_RACE_STEP 16
+#define CMD_RACE_END 17
 
 typedef uint32_t CommandType;
 
@@ -40,6 +42,31 @@ typedef struct {
     char message[MAX_MSG_LEN];
 } LoginResponse;
 
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+    char password[MAX_PW_LEN];
+} RegisterRequest;
+
+typedef struct {
+    CommandType cmd;
+    int success;
+    char message[MAX_MSG_LEN];
+} RegisterResponse;
+
+// 자산
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+    int money;
+} AssetUpdateRequest;
+
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+    int money;
+} AssetResponse;
+
 // 하이앤로우
 typedef struct {
     CommandType cmd;
@@ -56,19 +83,6 @@ typedef struct {
     int bet;
     int guess_num;
 } HighLowResponse;
-
-// 자산
-typedef struct {
-    CommandType cmd;
-    char user_id[MAX_ID_LEN];
-    int money;
-} AssetUpdateRequest;
-
-typedef struct {
-    CommandType cmd;
-    char user_id[MAX_ID_LEN];
-    int money;
-} AssetResponse;
 
 // 블랙잭
 typedef struct {
