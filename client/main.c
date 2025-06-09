@@ -75,17 +75,27 @@ static void show_welcome_screen(void)
 
 static int show_main_menu(void)
 {
-    clear(); box(stdscr, 0, 0);
-    mvprintw(3, 4, "🧾  회원가입 or 로그인 을 진행하세요 ");
-    mvprintw(5, 6, "[1]  회원가입");
-    mvprintw(6, 6, "[2]  로그인");
-    mvprintw(8, 4, "선택지를 입력하세요 : ");
-    refresh();
+    char input[10];
+    while (1) {
+        clear(); box(stdscr, 0, 0);
+        mvprintw(3, 4, "🧾  회원가입 or 로그인을 진행하세요 ");
+        mvprintw(5, 6, "[1]  회원가입");
+        mvprintw(6, 6, "[2]  로그인");
+        mvprintw(8, 4, "선택지를 입력하세요 : ");
+        refresh();
 
-    int ch;
-    while ((ch = getch()) != '1' && ch != '2');
-    return ch - '0';
+        echo();
+        getstr(input);
+        noecho();
+
+        if (strlen(input) == 1 && (input[0] == '1' || input[0] == '2'))
+            return input[0] - '0';
+
+        mvprintw(10, 4, "잘못된 입력입니다. * 아무 키나 누르세요 * ");
+        refresh(); getch();
+    }
 }
+
 
 /* ====== 로그인 루프 ====== */
 static int login_loop(int sock, int *user_money)
@@ -98,12 +108,18 @@ static int login_loop(int sock, int *user_money)
         /* 실패 시 옵션 */
         clear(); box(stdscr, 0, 0);
         mvprintw(3, 4, "❌  로그인 실패 : 아이디 혹은 비밀번호를 확인하세요. ");
-        mvprintw(5, 4, "[1] 재시도   [2] 나가기");
+        mvprintw(5, 4, "[1] 재시도   * 아무 키나 누르면 나갑니다 *");
+        mvprintw(7, 4, "선택지를 입력하세요: ");
+        
         refresh();
 
-        int ch;
-        while ((ch = getch()) != '1' && ch != '2');
-        if (ch == '2') return 0;   /* 나가기 */
+        char input[10];
+        echo();
+        getstr(input);
+        noecho();
+
+        if (strlen(input) == 1 && input[0] == '1') continue;  // 1 → 재시도
+        return 0;  // 그 외 → 나가기
     }
 }
 
@@ -116,7 +132,7 @@ static int show_post_login_menu(void) {
     mvprintw(5, 6, "[2] 노동장 입장");
     mvprintw(6, 6, "[3] 랭킹 보기");
     mvprintw(7, 6, "[4] 메신저");
-    mvprintw(8, 6, "[q] 로그아웃 후 종료");  // 🔥 추가
+    mvprintw(8, 6, "[q] 로그아웃 후 종료"); 
     mvprintw(10, 4, "선택지를 입력하세요: ");
     refresh();
 
@@ -133,7 +149,7 @@ static int show_post_login_menu(void) {
     }
 
     // 잘못된 입력 처리
-    mvprintw(12, 4, "잘못된 입력입니다. *아무 키나 누르세요*");
+    mvprintw(12, 4, "잘못된 입력입니다. * 아무 키나 누르세요 *");
     refresh();
     getch();
     
@@ -144,7 +160,7 @@ static int show_post_login_menu(void) {
 // 노동장 진입 후 노동 선택
 static int show_work_menu(void) {
     clear(); box(stdscr, 0, 0);
-    mvprintw(2, 4, "노동장에 왔으면 성실하게 일을 해야죠!");
+    mvprintw(2, 4, "노동장에 왔으면 성실하게 일을 해야 합니다.");
     mvprintw(4, 6, "[1] 햄버거 만들기 알바 시작하기");
     mvprintw(5, 6, "[2] 택배 분류 알바 시작하기");
     mvprintw(6, 6, "[Q] 메인 메뉴로 나가기");
@@ -225,7 +241,7 @@ void run_client(const char *ip, int port) {
                                 start_package_game(&user_money, sock);
                                 break;
                             case 3:
-                                mvprintw(13, 2, "잘못된 입력입니다. *아무 키나 누르세요*");
+                                mvprintw(13, 2, "잘못된 입력입니다. * 아무 키나 누르세요 *");
                                 refresh();
                                 getch();
                                 break;
@@ -238,10 +254,6 @@ void run_client(const char *ip, int port) {
                 break;
             case 4:
                 enter_chat_menu(sock);
-                break;
-            case 5:
-                mvprintw(12, 4, "Starting Chat... (TODO)");
-                refresh(); getch();
                 break;
         }
     }
