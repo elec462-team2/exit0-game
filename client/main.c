@@ -59,10 +59,10 @@ static void show_welcome_screen(void)
     clear();
     box(stdscr, 0, 0);
     attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(3, 4, "🎮  Welcome to the Game !");
+    mvprintw(3, 4, "🎮  게임 제목 !");
     attroff(A_BOLD);
     attron(COLOR_PAIR(2));
-    mvprintw(5, 4, "Press <ENTER> to continue,  Ctrl+C / q  to quit.");
+    mvprintw(5, 4, "시작하려면 <ENTER> , 종료하려면 Ctrl+C / q 를 입력하세요.");
     attroff(COLOR_PAIR(2));
     refresh();
     int ch;
@@ -76,10 +76,10 @@ static void show_welcome_screen(void)
 static int show_main_menu(void)
 {
     clear(); box(stdscr, 0, 0);
-    mvprintw(3, 4, "🧾  MAIN  MENU");
-    mvprintw(5, 6, "[1]  Register");
-    mvprintw(6, 6, "[2]  Login");
-    mvprintw(8, 4, "Select (1/2) : ");
+    mvprintw(3, 4, "🧾  회원가입 or 로그인 을 진행하세요 ");
+    mvprintw(5, 6, "[1]  회원가입");
+    mvprintw(6, 6, "[2]  로그인");
+    mvprintw(8, 4, "선택지를 입력하세요 : ");
     refresh();
 
     int ch;
@@ -97,7 +97,7 @@ static int login_loop(int sock, int *user_money)
 
         /* 실패 시 옵션 */
         clear(); box(stdscr, 0, 0);
-        mvprintw(3, 4, "❌  Login failed.");
+        mvprintw(3, 4, "❌  로그인 실패 : 아이디 혹은 비밀번호를 확인하세요. ");
         mvprintw(5, 4, "[1] 재시도   [2] 나가기");
         refresh();
 
@@ -133,16 +133,10 @@ static int show_post_login_menu(void) {
     }
 
     // 잘못된 입력 처리
-    mvprintw(12, 4, "잘못된 입력입니다. 아무 키나 누르세요.");
+    mvprintw(12, 4, "잘못된 입력입니다. *아무 키나 누르세요*");
     refresh();
     getch();
-    /*
-    int ch;
-    while ((ch = getch())) {
-        if (ch >= '1' && ch <= '4') return ch - '0';
-        if (ch == 'q' || ch == 'Q') return -1;  // q 입력 처리
-    }
-    */
+    
 
     return 0;
 }
@@ -180,7 +174,7 @@ void run_client(const char *ip, int port) {
     int user_money = 0;
     if (sock < 0) {
         cleanup_ui();
-        fprintf(stderr, "서버에 연결되지 않습니다.\n");
+        fprintf(stderr, "서버에 연결하지 못했습니다.\n");
         exit(1);
     }
 
@@ -207,7 +201,7 @@ void run_client(const char *ip, int port) {
             req.money = user_money;
             send(sock, &req, sizeof(req), 0);
 
-            mvprintw(12, 4, "Logging out... Goodbye!");
+            mvprintw(12, 4, "또 봐요, 안녕!");
             refresh();
             getch();
             break;
@@ -231,7 +225,7 @@ void run_client(const char *ip, int port) {
                                 start_package_game(&user_money, sock);
                                 break;
                             case 3:
-                                mvprintw(13, 2, "Invalid choice. Press any key to try again.");
+                                mvprintw(13, 2, "잘못된 입력입니다. *아무 키나 누르세요*");
                                 refresh();
                                 getch();
                                 break;
