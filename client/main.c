@@ -132,21 +132,13 @@ static int show_post_login_menu(void) {
 // 노동장 진입 후 노동 선택
 static int show_work_menu(void) {
     clear(); box(stdscr, 0, 0);
-    mvprintw(2, 4, "Welcome to the Work Zone!");
+    mvprintw(2, 4, "노동장에 왔으면 성실하게 일을 해야죠!");
     mvprintw(4, 6, "[1] 햄버거 만들기 알바 시작하기");
     mvprintw(5, 6, "[2] 택배 분류 알바 시작하기");
     mvprintw(6, 6, "[Q] 메인 메뉴로 나가기");
     
     mvprintw(8, 4, "선택지를 입력하세요: ");
     refresh();
-
-    /*
-    int ch;
-    while ((ch = getch())) {
-        if (ch >= '1' && ch <= '4') return ch - '0';
-        if (ch == 'q' || ch == 'Q') return -1;  // q 입력 처리
-    }
-    */
 
     // 입력 후에 enter 눌러야 화면 전환
     char input[10];
