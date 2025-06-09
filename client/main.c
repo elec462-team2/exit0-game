@@ -111,20 +111,38 @@ static int login_loop(int sock, int *user_money)
 // run_client() 위에 함수 선언 추가
 static int show_post_login_menu(void) {
     clear(); box(stdscr, 0, 0);
-    mvprintw(2, 4, "🎯  What would you like to do?");
-    mvprintw(4, 6, "[1] Enter Casino");
-    mvprintw(5, 6, "[2] Enter Work Zone");
-    mvprintw(6, 6, "[3] View Ranking");
-    mvprintw(7, 6, "[4] Chat");
-    mvprintw(8, 6, "[q] Logout and Exit");  // 🔥 추가
-    mvprintw(10, 4, "Select an option: ");
+    mvprintw(2, 4, "🎯 메인 메뉴: 무엇을 하시겠어요?");
+    mvprintw(4, 6, "[1] 카지노 입장");
+    mvprintw(5, 6, "[2] 노동장 입장");
+    mvprintw(6, 6, "[3] 랭킹 보기");
+    mvprintw(7, 6, "[4] 메신저");
+    mvprintw(8, 6, "[q] 로그아웃 후 종료");  // 🔥 추가
+    mvprintw(10, 4, "선택지를 입력하세요: ");
     refresh();
 
+    char input[10];
+    echo();
+    getstr(input);
+    noecho();
+
+    if (strlen(input) == 1) {
+        if (input[0] >= '1' && input[0] <= '4')
+            return input[0] - '0';
+        if (input[0] == 'q' || input[0] == 'Q')
+            return -1;
+    }
+
+    // 잘못된 입력 처리
+    mvprintw(12, 4, "잘못된 입력입니다. 아무 키나 누르세요.");
+    refresh();
+    getch();
+    /*
     int ch;
     while ((ch = getch())) {
         if (ch >= '1' && ch <= '4') return ch - '0';
         if (ch == 'q' || ch == 'Q') return -1;  // q 입력 처리
     }
+    */
 
     return 0;
 }
@@ -162,7 +180,7 @@ void run_client(const char *ip, int port) {
     int user_money = 0;
     if (sock < 0) {
         cleanup_ui();
-        fprintf(stderr, "Cannot connect to server.\n");
+        fprintf(stderr, "서버에 연결되지 않습니다.\n");
         exit(1);
     }
 
