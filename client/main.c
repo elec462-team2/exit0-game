@@ -133,14 +133,32 @@ static int show_post_login_menu(void) {
 static int show_work_menu(void) {
     clear(); box(stdscr, 0, 0);
     mvprintw(2, 4, "Welcome to the Work Zone!");
-    mvprintw(4, 6, "[1] Burger Shop Part-time Job");
-    mvprintw(5, 6, "[2] Package Sorting Part-time Job");
-    mvprintw(7, 4, "Select (1-2): ");
+    mvprintw(4, 6, "[1] 햄버거 만들기 알바 시작하기");
+    mvprintw(5, 6, "[2] 택배 분류 알바 시작하기");
+    mvprintw(6, 6, "[Q] 메인 메뉴로 나가기");
+    
+    mvprintw(8, 4, "선택지를 입력하세요: ");
     refresh();
 
+    /*
     int ch;
     while ((ch = getch())) {
-        if (ch == '1' || ch == '2') return ch - '0';
+        if (ch >= '1' && ch <= '4') return ch - '0';
+        if (ch == 'q' || ch == 'Q') return -1;  // q 입력 처리
+    }
+    */
+
+    // 입력 후에 enter 눌러야 화면 전환
+    char input[10];
+    echo();
+    while (1) {
+        getstr(input);  // 문자열로 입력받고 엔터 대기
+        noecho();
+        if (input[0] == 'q' || input[0] == 'Q') return -1;
+        if (strlen(input) == 1 && input[0] >= '1' && input[0] <= '2')
+            return input[0] - '0';
+        if (input[0] != 'q' && input[0] != 'Q' && input[0] != '1' && input[0] != '2')
+            return 3;
     }
 
     return 0;
@@ -191,15 +209,23 @@ void run_client(const char *ip, int port) {
                 break;
             case 2:
                 {
-                    // 노동장 -> 노동 방법 선택 
-                    int work_choice = show_work_menu();
-                    switch (work_choice) {
-                        case 1:
-                            start_burger_game(&user_money, sock);
-                            break;
-                        case 2:
-                            start_package_game(&user_money, sock);
-                            break;
+                    while (1) {
+                        // 노동장 -> 노동 방법 선택 
+                        int work_choice = show_work_menu();
+                        if (work_choice == -1)  break;
+                        switch (work_choice) {
+                            case 1:
+                                start_burger_game(&user_money, sock);
+                                break;
+                            case 2:
+                                start_package_game(&user_money, sock);
+                                break;
+                            case 3:
+                                mvprintw(13, 2, "Invalid choice. Press any key to try again.");
+                                refresh();
+                                getch();
+                                break;
+                        }
                     }
                 }
                 break;
