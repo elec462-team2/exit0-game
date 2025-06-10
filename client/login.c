@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <ctype.h>
 #include "../include/protocol.h"
 
 extern char global_user_id[MAX_ID_LEN];
@@ -40,7 +41,7 @@ int perform_login(int sock, int *user_money)
 {
     clear();
     box(stdscr, 0, 0);
-    mvprintw(1, 2, "🔐  LOGIN");
+    mvprintw(1, 2, "🔐  로그인");
     refresh();
 
     LoginRequest  req = { .cmd = CMD_LOGIN_REQ };
@@ -59,15 +60,26 @@ int perform_login(int sock, int *user_money)
         *user_money = res.money; // 서버에서 받은 돈 저장
         strcpy(global_user_id, req.user_id);  // ✅ ID 저장
         mvprintw(2, 2, "✅  %s", res.message);
-        mvprintw(4, 2, "💰  Balance : %d G", res.money);
+        mvprintw(4, 2, "💰  잔고 : %d G", res.money);
         refresh();
         getch();
         return 1;
     }
-    mvprintw(2, 2, "❌  Login failed.");
+    mvprintw(2, 2, "❌  로그인에 실패했습니다.");
     refresh();
     getch();
     return 0;
+}
+
+// 회원가입 요청한 아이디의 유효성 검사 : 영문.숫자로 이루어진 4-10자인지 확인합니다.
+int is_valid_id(const char *id) {
+    size_t len = strlen(id);
+    if (len < 4 || len > 10) return 0;
+
+    for (size_t i = 0; i < len; i++) {
+        if (!isalnum(id[i])) return 0;  // 영문자/숫자가 아니면 거부
+    }
+    return 1;
 }
 
 int perform_register(int sock)
@@ -78,9 +90,16 @@ int perform_register(int sock)
     /* ------ ① ID 중복 확인 ------ */
     while (1) {
         clear(); box(stdscr, 0, 0);
-        mvprintw(1, 2, "🆕  REGISTER  (4~10 영문/숫자)");
-        prompt_field(3, 2, "New ID : ", req.user_id, MAX_ID_LEN, 0);
+        mvprintw(1, 2, "🆕  회원가입  (4~10 영문/숫자)");
+        prompt_field(3, 2, "사용할 아이디 :", req.user_id, MAX_ID_LEN, 0);
 
+        // 🔐 유효성 검사 먼저 수행
+        if (!is_valid_id(req.user_id)) {
+            mvprintw(5, 2, "❌  ID는 4~10자의 영문자 또는 숫자만 가능합니다.");
+            refresh(); getch();
+            continue;  // 다시 입력
+        }
+        
         memset(req.password, 0, sizeof(req.password));     /* 첫 요청엔 비번 X */
         send(sock, &req, sizeof(req), 0);
         recv(sock, &res, sizeof(res), 0);
@@ -95,7 +114,7 @@ int perform_register(int sock)
     }
 
     /* ------ ② 최종 등록 ------ */
-    prompt_field(5, 2, "Password (6~12) : ", req.password, MAX_PW_LEN, 1);
+    prompt_field(5, 2, "비밀번호 설정 (6~12) : ", req.password, MAX_PW_LEN, 1);
     send(sock, &req, sizeof(req), 0);
     recv(sock, &res, sizeof(res), 0);
 
