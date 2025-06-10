@@ -9,19 +9,19 @@
 void show_ranking() {
     clear();
     box(stdscr, 0, 0);
-    mvprintw(1, 2, "=== Ranking ===");
+    mvprintw(1, 2, "=== 랭크 ===");
 
     // 1. 기준 시각 출력
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     char timebuf[64];
     strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
-    mvprintw(2, 2, "As of: %s", timebuf);
+    mvprintw(2, 2, "현재 시각: %s", timebuf);
 
     // 2. asset_db.txt 읽기
     FILE *fp = fopen("data/asset_db.txt", "r");
     if (!fp) {
-        mvprintw(4, 2, "Error: Cannot open asset_db.txt");
+        mvprintw(4, 2, "asset 정보를 불러올 수 없습니다.");
         refresh();
         getch();
         return;
@@ -52,13 +52,13 @@ void show_ranking() {
 
     // 4. 상위 30등 출력
     int limit = count < 30 ? count : 30;
-    mvprintw(4, 2, "Rank  ID                Balance");
+    mvprintw(4, 2, " 랭크    ID                  자산  ");
     mvprintw(5, 2, "---------------------------------");
     for (int i = 0; i < limit; i++) {
         mvprintw(6 + i, 2, "%2d. %-15s %8d G", i + 1, users[i].id, users[i].money);
     }
 
-    mvprintw(17, 2, "Press any key to return...");
+    mvprintw(17, 2, "* 아무 키나 누르세요... *");
     refresh();
     getch();
 }

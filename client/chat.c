@@ -74,7 +74,7 @@ void enter_chat_menu(int sock) {
         mvprintw(2, 2, "💬  채팅 메뉴");
         mvprintw(4, 4, "[1] 받은 메시지함");
         mvprintw(5, 4, "[2] 메시지 보내기");
-        mvprintw(6, 4, "[q] 뒤로 가기");
+        mvprintw(6, 4, "[Q] 뒤로 가기");
         mvprintw(8, 2, "선택: ");
         refresh();
 
