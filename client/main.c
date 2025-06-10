@@ -132,7 +132,7 @@ static int show_post_login_menu(void) {
     mvprintw(5, 6, "[2] 노동장 입장");
     mvprintw(6, 6, "[3] 랭킹 보기");
     mvprintw(7, 6, "[4] 메신저");
-    mvprintw(8, 6, "[q] 로그아웃 후 종료"); 
+    mvprintw(8, 6, "[Q] 로그아웃 후 종료"); 
     mvprintw(10, 4, "선택지를 입력하세요: ");
     refresh();
 
