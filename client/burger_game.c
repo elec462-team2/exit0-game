@@ -105,7 +105,7 @@ void start_burger_game(int *money, int sock) {
             }
         }
 
-        mvprintw(15, 4, "* 계속 하려면 아무 키나 누르세요... *");
+        mvprintw(15, 4, "* 메뉴로 나가려면 [Q], 계속 하려면 아무 키나 누르세요... *");
         refresh();
         int ch = getch();
         if (ch == 'q' || ch == 'Q') {
