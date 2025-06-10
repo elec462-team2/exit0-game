@@ -73,6 +73,21 @@ void handle_user_commands(int client_sock, const char *userid) {
             case CMD_CHAT_SEND_REQ:
                 handle_chat(client_sock, userid, cmd);
                 break;
+            case CMD_UPDATE_ASSET: {
+                AssetUpdateRequest req;
+                // 이미 cmd는 받았으니, 나머지 user_id와 money만 recv
+                ssize_t bytes = recv(client_sock,
+                                     ((char*)&req) + sizeof(CommandType),
+                                     sizeof(AssetUpdateRequest) - sizeof(CommandType),
+                                     0);
+                if (bytes <= 0) break;
+
+                req.cmd = cmd;  // cmd는 앞서 이미 받은 것
+
+                update_user_asset(req.user_id, req.money);
+                printf("[SERVER] %s asset updated: %d\n", req.user_id, req.money);
+                break;
+            }
 
             default:
                 break;
