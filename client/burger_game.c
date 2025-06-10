@@ -15,7 +15,7 @@ extern char global_user_id[MAX_ID_LEN];
 #define MAX_ORDER 7
 
 const char *ingredients[MAX_INGREDIENTS] = {
-    "Bun", "Lettuce", "Tomato", "Patty", "Cheese", "Onion"
+    "빵", "양상추", "토마토", "패티", "치즈", "양파"
 };
 
 void start_burger_game(int *money, int sock) {
@@ -26,13 +26,15 @@ void start_burger_game(int *money, int sock) {
 
     while (running) {
         clear(); box(stdscr, 0, 0);
-        mvprintw(1, 4, "Burger Assembly Part-time Job!");
-        mvprintw(2, 4, "Press 'q' to quit anytime.");
+
+        mvprintw(1, 4, " << 햄빌리버블 버거 가게 >>");
+        mvprintw(3, 4, "버거 만들기 알바 하러 오셨죠? 앞치마 매고 이리오세요~");
+        //mvprintw(2, 4, "Press 'q' to quit anytime.");
 
         // 1. Ingredient list
-        mvprintw(4, 4, "Ingredient List:");
+        mvprintw(5, 4, "재료 순서입니다. 바르게 넣지 않으면 손님이 화낼 지도 몰라요! :");
         for (int i = 0; i < MAX_INGREDIENTS; i++) {
-            mvprintw(5 + i, 6, "[%d] %s", i + 1, ingredients[i]);
+            mvprintw(6 + i, 6, "[%d] %s", i + 1, ingredients[i]);
         }
 
         // 2. Order generation: first and last = Bun
@@ -44,18 +46,22 @@ void start_burger_game(int *money, int sock) {
         }
         order[order_len - 1] = 0;  // Bun
 
-        mvprintw(13, 4, "Today's Order:");
+        int x = 6;
+        mvprintw(14, 4, "오늘의 주문:");
         for (int i = 0; i < order_len; i++) {
-            mvprintw(14, 6 + i*10, "[%s]", ingredients[order[i]]);
+            const char *name = ingredients[order[i]];
+            int len = strlen(name);
+            mvprintw(15, x, "[%s]", name);
+            x += len + 4;
         }
 
-        mvprintw(16, 4, "Enter ingredient numbers in order (e.g., 1 3 5 ...):");
+        mvprintw(17, 4, "순서에 맞게 재료를 입력하세요 (예시. 1 3 5 ...):");
         refresh();
 
         // 3. User input
         echo();
         char input_line[128] = {0};
-        move(17, 4);
+        move(18, 4);
         getnstr(input_line, sizeof(input_line) - 1);
         noecho();
 
@@ -80,24 +86,26 @@ void start_burger_game(int *money, int sock) {
         if (correct) {
             int reward = order_len * 100;
             *money += reward;
-            mvprintw(4, 4, "✅ Perfect! Your burger was assembled correctly!");
-            mvprintw(6, 4, "[Earnings] +%d G (Total: %d G)", reward, *money);
+            mvprintw(3, 4, "\"이 버거, 제 인생을 바꿨어요.\"");
+            mvprintw(6, 4, "✅ 완벽한 버거입니다. 손님도 만족하네요. ");
+            mvprintw(8, 4, "[임금 지급] +%d G (총 자산: %d G)", reward, *money);
         } else {
             int penalty = 200;
             *money -= penalty;
 
             if (*money < 0) *money = 0;
             
-            mvprintw(4, 4, "❌ Wrong ingredients! The customer is upset.");
-            mvprintw(6, 4, "[Penalty] -%d G (Total: %d G)", penalty, *money);
+            mvprintw(3, 4, "\"이런 버거 처음 봐! 사장 불러와!\"");
+            mvprintw(6, 4, "❌ 버거가 잘못 나갔네요... 손님이 화났습니다.");
+            mvprintw(8, 4, "[임금 차감] -%d G (총 자산: %d G)", penalty, *money);
 
-            mvprintw(8, 4, "Correct Order:");
+            mvprintw(10, 4, "정답:");
             for (int i = 0; i < order_len; i++) {
-                mvprintw(9, 6 + i*10, "%s", ingredients[order[i]]);
+                mvprintw(11, 6 + i*5, "%d", order[i]);
             }
         }
 
-        mvprintw(13, 4, "Press any key to continue (or 'q' to quit)");
+        mvprintw(15, 4, "* 계속 하려면 아무 키나 누르세요... *");
         refresh();
         int ch = getch();
         if (ch == 'q' || ch == 'Q') {
@@ -110,7 +118,7 @@ void start_burger_game(int *money, int sock) {
     }
 
     clear(); box(stdscr, 0, 0);
-    mvprintw(4, 4, "Exiting Burger Game. See you again!");
+    mvprintw(4, 4, "오늘 알바 수고했어요. 다음에도 시간 맞춰 와요!");
     refresh(); getch();
 
 }
