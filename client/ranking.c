@@ -51,14 +51,14 @@ void show_ranking() {
     }
 
     // 4. 상위 30등 출력
-    int limit = count < 30 ? count : 30;
-    mvprintw(4, 2, " 랭크    ID                  자산  ");
+    int limit = count < 10 ? count : 10;
+    mvprintw(4, 2, " 랭크     ID             자산      ");
     mvprintw(5, 2, "---------------------------------");
     for (int i = 0; i < limit; i++) {
-        mvprintw(6 + i, 2, "%2d. %-15s %8d G", i + 1, users[i].id, users[i].money);
+        mvprintw(6 + i, 2, "%2d.     %-11s %8d G", i + 1, users[i].id, users[i].money);
     }
 
-    mvprintw(17, 2, "* 아무 키나 누르세요... *");
+    mvprintw(17, 2, "* 돌아가려면 아무 키나 누르세요... *");
     refresh();
     getch();
 }
