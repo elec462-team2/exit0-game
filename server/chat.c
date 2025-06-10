@@ -23,12 +23,12 @@ void handle_chat(int client_sock, const char *userid, CommandType cmd) {
 
         if (!fp) {
             res.success = 0;
-            strcpy(res.message, "⚠️  Inbox open failed.");
+            strcpy(res.message, "⚠️  메세지 전송 실패: 상대방을 찾을 수 없습니다. ");
         } else {
             fprintf(fp, "%s:%s\n", userid, req.content);
             fclose(fp);
             res.success = 1;
-            strcpy(res.message, "✅  Message sent successfully.");
+            strcpy(res.message, "✅  메세지가 성공적으로 전송되었습니다! ");
         }
         send(client_sock, &res, sizeof(res), 0);
     }
@@ -38,7 +38,7 @@ void handle_chat(int client_sock, const char *userid, CommandType cmd) {
             .cmd = CMD_CHAT_INBOX_RES,
             .message_count = 0
         };
-
+        
         // 내 메시지함 경로
         char path[128];
         snprintf(path, sizeof(path), "%s/%s.txt", CHAT_DIR, userid);
