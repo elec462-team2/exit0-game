@@ -46,20 +46,22 @@ void play_race_game(int sock, int *money) {
     mvprintw(9, 35, "🎠 :   40%% | x2.5");
     mvprintw(10, 35, "🐪 :   20%% | x5");
     mvprintw(12, 5, "당신의 말을 고르세요 ( 0: 🐎 1: 🎠 2: 🐪 ) → ");
-    getstr(buf); choice = atoi(buf);    
 
-    if (choice < 0 || choice > 2) {
+    getnstr(buf, sizeof(buf) - 1);
+    if (strlen(buf) != 1 || buf[0] < '0' || buf[0] > '2') {
         mvprintw(14, 5, "그런 말은 선택지에 없습니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
+    choice = buf[0] - '0';
 
     mvprintw(14, 5, "베팅 금액을 입력하세요: ");
-    getstr(buf); bet = atoi(buf);
-    
+    getnstr(buf, sizeof(buf) - 1);
+    bet = atoi(buf);
     if (bet <= 0 || bet > *money) {
         mvprintw(16, 5, "잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
+
     noecho();
     CommandType cmd = CMD_RACE_REQ;
     send(sock, &cmd, sizeof(cmd), 0);
@@ -200,7 +202,7 @@ void play_highlow_game(int sock, int *money) {
 
     // 1) TUI로 배팅 입력
     clear(); box(stdscr,0,0);
-    mvprintw(2, 5, "🔢 하이 앤 테이블입니다! 뭐야 또 너야?🔢");
+    mvprintw(2, 5, "🔢 하이 앤 로우 테이블입니다! 뭐야 또 너야?🔢");
     mvprintw(4, 5, "내가 숫자를 주테니 나보다 높을지 낮을지 맞혀봐");
     mvprintw(6,5,"잔고 : [%dG]", *money);
     mvprintw(8,5,"베팅 금액을 입력하세요 : ");
