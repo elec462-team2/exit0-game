@@ -107,7 +107,7 @@ void play_blackjack_game(int sock, int *money) {
     int bet = 0;
 
     echo(); clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "🃏 또 나한테 돈 주러 왔구나? 블랙잭 테이블에 온 걸 환영해! 🃏");
+    mvprintw(2, 5, "🃏 블랙잭 테이블에 온 걸 환영해! 🃏");
     mvprintw(4, 5, "규칙은 알지? 총합이 21을 넘지 않고 더 높은 사람이 승자야!");
     mvprintw(6, 5, "잔고 : [%dG]", *money);
     mvprintw(8, 5, "베팅 금액을 입력하세요 : ");
@@ -136,7 +136,7 @@ void play_blackjack_game(int sock, int *money) {
         draw_big_number(player_score, 2, 5);
         mvprintw(8, 5, "총합: %d", player_score);
 
-        mvprintw(10, 5, "[h] 한 장 더!  [s] 멈출래..");
+        mvprintw(10, 5, "[h] 한 장 더!  [s] 스톱!!!");
         refresh();
         char choice = getch();
 
@@ -180,7 +180,7 @@ void play_blackjack_game(int sock, int *money) {
     else if (res.player_score == res.dealer_score)
         reason_msg = "숫자가 똑같네? 재미없게";
     else if (res.player_score > res.dealer_score)
-        reason_msg = "나보다 숫자가 높네? 한 번 봐줄게";
+        reason_msg = "나보다 숫자가 높네? 너가 이겼어..";
     else
         reason_msg = "점수 차 보이지? 사장님보다 너가 돈을 더 챙겨주네 ㅎㅎ";
 
@@ -202,8 +202,8 @@ void play_highlow_game(int sock, int *money) {
 
     // 1) TUI로 배팅 입력
     clear(); box(stdscr,0,0);
-    mvprintw(2, 5, "🔢 하이 앤 로우 테이블입니다! 뭐야 또 너야?🔢");
-    mvprintw(4, 5, "내가 숫자를 주테니 나보다 높을지 낮을지 맞혀봐");
+    mvprintw(2, 5, "🔢 하이 앤 로우 테이블에 온 걸 환영해! 🔢");
+    mvprintw(4, 5, "내가 숫자를 줄 테니 나보다 높을지 낮을지 맞혀 봐~");
     mvprintw(6,5,"잔고 : [%dG]", *money);
     mvprintw(8,5,"베팅 금액을 입력하세요 : ");
     getstr(buf);
@@ -250,7 +250,7 @@ void play_highlow_game(int sock, int *money) {
     mvprintw(2, 5, "이건 네 숫자 : %d", res.my_num);      draw_big_number(res.my_num, 4, 5);
     mvprintw(2, 25, "내 숫자는 이거: %d", res.cpu_num); draw_big_number(res.cpu_num, 4,25);
     mvprintw(10, 5, "너가 고른 선택 : %c", res.guess_num == 1 ? 'H' : 'L');
-    mvprintw(12, 5, "결과 : %s (%c%dG)    최종 자산 : %dG", res.win?"운이 좋네 이겼어!":"돈은 내가 잠시 맡아둘게 ㅋㅋ", res.win?'+':'-', res.bet, res.new_money);
+    mvprintw(12, 5, "결과 : %s (%c%dG)    최종 자산 : %dG", res.win?"운이 좋네 네가 이겼어!":"돈은 내가 잠시 맡아둘게 ㅋㅋ", res.win?'+':'-', res.bet, res.new_money);
     mvprintw(16, 5, "* 아무 키나 누르세요... *");
 
     *money = res.new_money;
