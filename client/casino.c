@@ -38,28 +38,30 @@ void play_race_game(int sock, int *money) {
     int choice = -1, bet = 0;
 
     echo(); clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "** 경마 게임에 오신 걸 환영합니다! **");
+    mvprintw(2, 5, "🏇 자자 곧 시합 시작해요 빨리 배팅하세요! 경마 게임에 온 걸 환영해요🏇");
     mvprintw(4, 5, "말을 고르고 베팅 금액을 입력하세요.");
     mvprintw(6, 5, "잔고: [%dG]", *money);
     mvprintw(6, 35, "[승률 & 배당률]");
-    mvprintw(8, 35, "🐎 : 66.7%% & x1.5");
-    mvprintw(9, 35, "🎠 : 40%% & x2.5");
-    mvprintw(10, 35, "🐪 : 20%% & x5");
+    mvprintw(8, 35, "🐎 : 66.7%% | x1.5");
+    mvprintw(9, 35, "🎠 :   40%% | x2.5");
+    mvprintw(10, 35, "🐪 :   20%% | x5");
     mvprintw(12, 5, "당신의 말을 고르세요 ( 0: 🐎 1: 🎠 2: 🐪 ) → ");
-    getstr(buf); choice = atoi(buf);    
 
-    if (choice < 0 || choice > 2) {
+    getnstr(buf, sizeof(buf) - 1);
+    if (strlen(buf) != 1 || buf[0] < '0' || buf[0] > '2') {
         mvprintw(14, 5, "그런 말은 선택지에 없습니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
+    choice = buf[0] - '0';
 
     mvprintw(14, 5, "베팅 금액을 입력하세요: ");
-    getstr(buf); bet = atoi(buf);
-    
+    getnstr(buf, sizeof(buf) - 1);
+    bet = atoi(buf);
     if (bet <= 0 || bet > *money) {
         mvprintw(16, 5, "잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
+
     noecho();
     CommandType cmd = CMD_RACE_REQ;
     send(sock, &cmd, sizeof(cmd), 0);
@@ -89,7 +91,7 @@ void play_race_game(int sock, int *money) {
     RaceResultResponse res;
     recv(sock, &res, sizeof(res), 0);
 
-    mvprintw(14, 5, "경기 종료!");
+    mvprintw(14, 5, "🏁경기 종료!");
     mvprintw(15, 5, "당신이 선택한 말: %s (말 %d)", horse_names[res.user_choice], res.user_choice);
     mvprintw(16, 5, "승리한 말: %s (말 %d)", horse_names[res.winner], res.winner);
     mvprintw(17, 5, "배당률: %dG", res.payout);
@@ -105,8 +107,8 @@ void play_blackjack_game(int sock, int *money) {
     int bet = 0;
 
     echo(); clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "** 블랙잭 게임장에 온 걸 환영합니다! **");
-    mvprintw(4, 5, "딜러와 게임을 해봅시다. 총합 21을 넘지 마세요!");
+    mvprintw(2, 5, "🃏 또 나한테 돈 주러 왔구나? 블랙잭 테이블에 온 걸 환영해! 🃏");
+    mvprintw(4, 5, "규칙은 알지? 총합이 21을 넘지 않고 더 높은 사람이 승자야!");
     mvprintw(6, 5, "잔고 : [%dG]", *money);
     mvprintw(8, 5, "베팅 금액을 입력하세요 : ");
     getstr(buf); bet = atoi(buf);
@@ -130,11 +132,11 @@ void play_blackjack_game(int sock, int *money) {
 
     while (1) {
         clear(); box(stdscr, 0, 0);
-        mvprintw(1, 5, "[당신]");
+        mvprintw(1, 5, "자. 너가 뽑은 카드야!");
         draw_big_number(player_score, 2, 5);
         mvprintw(8, 5, "총합: %d", player_score);
 
-        mvprintw(10, 5, "[h] hit   [s] Stand");
+        mvprintw(10, 5, "[h] 한 장 더!  [s] 멈출래..");
         refresh();
         char choice = getch();
 
@@ -156,7 +158,7 @@ void play_blackjack_game(int sock, int *money) {
     clear(); box(stdscr, 0, 0);
     mvprintw(1, 5, "[결과]");
     draw_big_number(res.player_score, 2, 5);
-    mvprintw(8, 5, "당신의 총합: %d", res.player_score);
+    mvprintw(8, 5, "너의 총합: %d", res.player_score);
 
     mvprintw(1, 35, "[딜러]");
     draw_big_number(res.dealer_score, 2, 35);
@@ -164,7 +166,7 @@ void play_blackjack_game(int sock, int *money) {
 
     // 딜러가 뽑은 카드 하나씩 보여주기
     int drow = 10;
-    mvprintw(drow++, 35, "딜러가 뽑은 카드:");
+    mvprintw(drow++, 35, "내가 뽑은 카드들이야:");
     for (int i = 0; i < res.dealer_card_count; i++) {
         mvprintw(drow++, 37, "- 카드 %d: %d", i + 1, res.dealer_cards[i]);
     }
@@ -172,21 +174,21 @@ void play_blackjack_game(int sock, int *money) {
     // 메시지 분기
     const char *reason_msg = "";
     if (res.player_score > 21)
-        reason_msg = "당신의 수가 21을 넘겼습니다! *딜러*의 승리입니다.";
+        reason_msg = "뭐야 21을 넘겼구나! 소고기 맛있게 먹을게~!";
     else if (res.dealer_score > 21)
-        reason_msg = "딜러의 수가 21을 넘겼습니다! *당신*의 승리입니다.";
+        reason_msg = "... 내가 21을 넘겼네. 흐름 탔으니까 한 판 더 해야지?";
     else if (res.player_score == res.dealer_score)
-        reason_msg = "Push! 무승부입니다.";
+        reason_msg = "숫자가 똑같네? 재미없게";
     else if (res.player_score > res.dealer_score)
-        reason_msg = "당신의 수가 더 높습니다! *당신*의 승리입니다.";
+        reason_msg = "나보다 숫자가 높네? 한 번 봐줄게";
     else
-        reason_msg = "딜러의 수가 더 높습니다! *딜러*의 승리입니다.";
+        reason_msg = "점수 차 보이지? 사장님보다 너가 돈을 더 챙겨주네 ㅎㅎ";
 
     // 결과/자산 반영
     *money = res.new_money;
 
     mvprintw(drow + 1, 5, "%s", reason_msg);
-    mvprintw(drow + 2, 5, "(결과: %s)", res.win == 1 ? "당신이 이겼습니다!" : (res.win == 2 ? "무승부입니다." : "당신이 졌습니다."));
+    mvprintw(drow + 2, 5, "(결과: %s)", res.win == 1 ? "승리" : (res.win == 2 ? "무승부" : "패배"));
     mvprintw(drow + 4, 5, "최종 자산: %dG", *money);
     mvprintw(drow + 6, 5, "* 계속하려면 아무 키나 누르세요... *");
     refresh(); getch();
@@ -200,8 +202,8 @@ void play_highlow_game(int sock, int *money) {
 
     // 1) TUI로 배팅 입력
     clear(); box(stdscr,0,0);
-    mvprintw(2, 5, "** 하이앤로우 게임장에 온 것을 환영합니다! **");
-    mvprintw(4, 5, "당신의 숫자가 딜러의 숫자보다 높을 지, 낮을 지 예측하세요.");
+    mvprintw(2, 5, "🔢 하이 앤 로우 테이블입니다! 뭐야 또 너야?🔢");
+    mvprintw(4, 5, "내가 숫자를 주테니 나보다 높을지 낮을지 맞혀봐");
     mvprintw(6,5,"잔고 : [%dG]", *money);
     mvprintw(8,5,"베팅 금액을 입력하세요 : ");
     getstr(buf);
@@ -213,7 +215,8 @@ void play_highlow_game(int sock, int *money) {
     }
 
     // 2) TUI로 H/L 입력
-    mvprintw(10,5,"당신은 예측할 수 있을까요? [h] 높다 or [l] 낮다: ");
+    mvprintw(10,5,"오케이! 이제 한 번 맞춰봐");
+    mvprintw(11,5,"[h] 높지 않을까? or [l] 낮을 거 같은데..");
     getstr(buf);
     noecho();
     refresh();
@@ -244,10 +247,10 @@ void play_highlow_game(int sock, int *money) {
         return;
     }
     clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "당신의 숫자 : %d", res.my_num);      draw_big_number(res.my_num, 4, 5);
-    mvprintw(2, 25, "딜러의 숫자 : %d", res.cpu_num); draw_big_number(res.cpu_num, 4,25);
-    mvprintw(10, 5, "당신의 예측 : %c", res.guess_num == 1 ? 'H' : 'L');
-    mvprintw(12, 5, "결과 : %s (%c%dG)    최종 자산 : %dG", res.win?"WIN":"LOSE", res.win?'+':'-', res.bet, res.new_money);
+    mvprintw(2, 5, "이건 네 숫자 : %d", res.my_num);      draw_big_number(res.my_num, 4, 5);
+    mvprintw(2, 25, "내 숫자는 이거: %d", res.cpu_num); draw_big_number(res.cpu_num, 4,25);
+    mvprintw(10, 5, "너가 고른 선택 : %c", res.guess_num == 1 ? 'H' : 'L');
+    mvprintw(12, 5, "결과 : %s (%c%dG)    최종 자산 : %dG", res.win?"운이 좋네 이겼어!":"돈은 내가 잠시 맡아둘게 ㅋㅋ", res.win?'+':'-', res.bet, res.new_money);
     mvprintw(16, 5, "* 아무 키나 누르세요... *");
 
     *money = res.new_money;
@@ -313,7 +316,7 @@ void start_casino_game(int sock, int *user_money) {
                 // Blackjack
                 mvprintw(8, 2, "② 블랙잭 🃏 (난이도: 중)");
                 mvprintw(9, 4, "- 당신과 딜러가 카드를 뽑으며 21에 가까운 수를 만드는 게임입니다.");
-                mvprintw(10, 4, "- 당신의 점수가 21을 넘으면 즉시 패배합니다.");
+                mvprintw(10, 4, "- 점수가 21을 넘으면 즉시 패배합니다.");
                 mvprintw(11, 4, "- 딜러보다 높고 21 이하일 경우 승리하여 보상을 얻습니다.");
 
                 // Race (경마)

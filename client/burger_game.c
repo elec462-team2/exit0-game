@@ -84,7 +84,7 @@ void start_burger_game(int *money, int sock) {
         // 5. Result
         clear(); box(stdscr, 0, 0);
         if (correct) {
-            int reward = order_len * 100;
+            int reward = order_len * 10;
             *money += reward;
             mvprintw(3, 4, "\"이 버거, 제 인생을 바꿨어요.\"");
             mvprintw(6, 4, "✅ 완벽한 버거입니다. 손님도 만족하네요. ");
