@@ -12,6 +12,7 @@
 extern void start_casino_game(int sock, int *user_money);
 extern void start_burger_game(int *money, int sock);
 extern void enter_chat_menu(int sock);
+extern void draw_title_screen();  // 새로 추가한 타이틀 화면 함수
 void show_ranking();
 char global_user_id[MAX_ID_LEN] = {0};
 
@@ -53,21 +54,44 @@ static int connect_to_server(const char *ip, int port)
     return sock;
 }
 
-/* ====== UI 화면 ====== */
 static void show_welcome_screen(void)
 {
     clear();
     box(stdscr, 0, 0);
-    attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(3, 4, "🎮  게임 제목 !");
+
+    // 배경 도트 아트 (서부 느낌)
+    mvprintw(3, 15, "              🌵                  🌅      🌵");
+    mvprintw(4, 15, "         🌵        🏜️      ⛰️       🏜️            🌵");
+    mvprintw(5, 15, "  ~~~    __||__        ~~~~~      __||__    ~~~");
+    mvprintw(6, 15, "        _/    \\_                 _/    \\_");
+    mvprintw(7, 15, "       |        |     🌞        |        |");
+    mvprintw(8, 15, "       |  🐎    |               |    💼  |");
+    mvprintw(9, 15, "       |________|               |________|");
+
+    // 게임 타이틀
+    attron(A_BOLD);
+    mvprintw(11, 24, "💰 『 한탕의 꿈 』 💸");
     attroff(A_BOLD);
+
+    // 부제 및 설명
+    mvprintw(13, 15, "───────────────────────────────────────────────");
+    mvprintw(14, 13, "노동장과 도박장을 전전하며 알바비를 불리는 인생 시뮬레이터.");
+    mvprintw(15, 13, "기회는 단 한 번! 잃을 건 내 돈, 얻을 건 환상 뿐이라면?");
+    mvprintw(16, 15, "───────────────────────────────────────────────");
+
+    // 안내 문구
     attron(COLOR_PAIR(2));
-    mvprintw(5, 4, "시작하려면 <ENTER> , 종료하려면 Ctrl+C / q 를 입력하세요.");
+    mvprintw(18, 15, "※ 본 게임은 터미널 창 크기 100x30 이상을 권장합니다.");
+    mvprintw(19, 15, "* 게임 중 임의로 창을 조절하지 마세요. *");
+    mvprintw(22, 16, "⏎ 시작하려면 <ENTER> | 종료하려면 [Ctrl+C] 또는 'q'를 입력하세요.");
     attroff(COLOR_PAIR(2));
     refresh();
-    int ch;
-    while ((ch = getch()) != '\n' && ch != KEY_ENTER && ch != 'q');
-    if (ch == 'q') {
+
+    // 입력 한 번만 받고 즉시 분기
+    int ch = getch();
+    if (ch == '\n' || ch == KEY_ENTER) {
+        return;  // 다음 흐름 진행 (메뉴 등)
+    } else if (ch == 'q' || ch == 'Q') {
         cleanup_ui();
         exit(0);
     }
