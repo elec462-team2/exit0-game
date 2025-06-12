@@ -90,7 +90,7 @@ void start_burger_game(int *money, int sock) {
             mvprintw(6, 4, "✅ 완벽한 버거입니다. 손님도 만족하네요. ");
             mvprintw(8, 4, "[임금 지급] +%d G (총 자산: %d G)", reward, *money);
         } else {
-            int penalty = 200;
+            int penalty = 20;
             *money -= penalty;
 
             if (*money < 0) *money = 0;
