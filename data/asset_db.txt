@@ -1,3 +1,4 @@
 admin:1010
 jiyun:750
 minji:1200
+kangmu:175
