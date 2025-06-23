@@ -30,6 +30,10 @@
 #define CMD_CHAT_INBOX_RES   19   // 채팅 메시지함 응답
 #define CMD_CHAT_SEND_REQ    20   // 메시지 보내기 요청
 #define CMD_CHAT_SEND_RES    21   // 메시지 보내기 응답
+#define CMD_BURGER_REQ       22
+#define CMD_BURGER_RES       23
+#define CMD_PACKAGE_REQ      24
+#define CMD_PACKAGE_RES      25
 
 typedef uint32_t CommandType;
 
@@ -131,6 +135,61 @@ typedef struct {
     int new_money;
 } RaceResultResponse;
 
+// 버거 게임
+// 1. 게임 시작 요청
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+} BurgerOrderRequest;
+
+// 2. 주문서 전송
+typedef struct {
+    char order[8][10];
+    int order_len;
+} BurgerOrderSheet;
+
+// 3. 정답 제출
+typedef struct {
+    CommandType cmd;
+    char user_id[MAX_ID_LEN];
+    char input[64];  // "1 3 5 2 4" 형식
+} BurgerAnswerRequest;
+
+// 4. 결과 전송
+typedef struct {
+    int correct;            // 1=정답, 0=오답
+    int delta_money;        // 변화된 금액 (+/-)
+    int updated_money;      // 최종 자산
+} BurgerResultResponse;
+
+// 패키지 게임 시작 요청
+typedef struct {
+    char region[10];  // 예: "인천"
+    char center;                   // 예: 'A'
+} RegionData;
+
+typedef struct {
+    CommandType cmd;   // CMD_PACKAGE_REQ
+    char user_id[MAX_ID_LEN];
+} PackageRequest;
+
+typedef struct {
+    RegionData region_info; // 지역 이름 + 정답 물류 창고 코드
+} PackageResponse;
+
+typedef struct {
+    CommandType cmd;   // CMD_PACKAGE_RES
+    char user_id[MAX_ID_LEN];
+    char answer;       // 사용자 입력 ('A' ~ 'E')
+} PackageAnswer;
+
+typedef struct {
+    int correct;       // 1 = 정답, 0 = 오답
+    int delta_money;
+    int updated_money;
+    char correct_answer; // 정답 출력용
+} PackageResult;
+
 // 채팅 메시지 단위
 typedef struct {
     char from[MAX_ID_LEN];             // 보낸 사람 ID
@@ -157,5 +216,6 @@ typedef struct {
     int success;                       // 1=성공, 0=실패
     char message[MAX_MSG_LEN];         // 성공/실패 메시지
 } ChatSendResponse;
+
 
 #endif // __PROTOCOL_H__
