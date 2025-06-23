@@ -7,22 +7,23 @@
 #include <ncurses.h>
 #include <locale.h>
 #include <signal.h>
+#include "../include/client_api.h"
 #include "../include/protocol.h"
 
-static const char *big_digits[10][5] = {
-    { " *** ", "*   *", "*   *", "*   *", " *** " },
-    { "  *  ", " **  ", "  *  ", "  *  ", " *** " },
-    { " *** ", "    *", " *** ", "*    ", "*****" },
-    { "**** ", "    *", " *** ", "    *", "**** " },
-    { "*  * ", "*  * ", "*****", "   * ", "   * " },    
-    { "*****", "*    ", "**** ", "    *", "**** " },
-    { " *** ", "*    ", "**** ", "*   *", " *** " },
-    { "*****", "   * ", "  *  ", " *   ", " *   " },
-    { " *** ", "*   *", " *** ", "*   *", " *** " },
-    { " *** ", "*   *", " ****", "    *", " *** " },
+const char *big_digits[10][5] = {
+    { " ███ ", "█   █", "█   █", "█   █", " ███ " },
+    { "  █  ", " ██  ", "  █  ", "  █  ", " ███ " },
+    { " ███ ", "    █", " ███ ", "█    ", "█████" },
+    { "████ ", "    █", " ███ ", "    █", "████ " },
+    { "█  █ ", "█  █ ", "█████", "   █ ", "   █ " },    
+    { "█████", "█    ", "████ ", "    █", "████ " },
+    { " ███ ", "█    ", "████ ", "█   █", " ███ " },
+    { "█████", "   █ ", "  █  ", " █   ", " █   " },
+    { " ███ ", "█   █", " ███ ", "█   █", " ███ " },
+    { " ███ ", "█   █", " ████", "    █", " ███ " },
 };
 
-static void draw_big_number(int num, int row, int col) {
+void draw_big_number(int num, int row, int col) {
     char s[16];
     sprintf(s, "%d", num);
     for (int i = 0; i < 5; i++) {
@@ -38,27 +39,33 @@ void play_race_game(int sock, int *money) {
     int choice = -1, bet = 0;
 
     echo(); clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "🏇 자자 곧 시합 시작해요 빨리 배팅하세요! 경마 게임에 온 걸 환영해요🏇");
-    mvprintw(4, 5, "말을 고르고 베팅 금액을 입력하세요.");
-    mvprintw(6, 5, "잔고: [%dG]", *money);
-    mvprintw(6, 35, "[승률 & 배당률]");
-    mvprintw(8, 35, "🐎 : 66.7%% | x1.5");
-    mvprintw(9, 35, "🎠 :   40%% | x2.5");
-    mvprintw(10, 35, "🐪 :   20%% | x5");
-    mvprintw(12, 5, "당신의 말을 고르세요 ( 0: 🐎 1: 🎠 2: 🐪 ) → ");
+    int y = get_centered_y(12);
+    mvprintw(y, get_centered_x("🏇 자자 곧 시합 시작해요 빨리 배팅하세요! 경마 게임에 온 걸 환영해요🏇"),
+             "🏇 자자 곧 시합 시작해요 빨리 배팅하세요! 경마 게임에 온 걸 환영해요🏇");
+    mvprintw(y + 2, get_centered_x("말을 고르고 베팅 금액을 입력하세요."), "말을 고르고 베팅 금액을 입력하세요.");
+    mvprintw(y + 4, get_centered_x("잔고: [0000G]"), "잔고: [%dG]", *money);
 
+    mvprintw(y + 4, getmaxx(stdscr) - 25, "[승률 & 배당률]");
+    mvprintw(y + 6, getmaxx(stdscr) - 25, "🐎 : 66.7%% | x1.5");
+    mvprintw(y + 7, getmaxx(stdscr) - 25, "🎠 :   40%% | x2.5");
+    mvprintw(y + 8, getmaxx(stdscr) - 25, "🐪 :   20%% | x5");
+
+    mvprintw(y + 6, get_centered_x("당신의 말을 고르세요 ( 0: 🐎 1: 🎠 2: 🐪 ) → ")-3,
+             "당신의 말을 고르세요 ( 0: 🐎 1: 🎠 2: 🐪 ) → ");
     getnstr(buf, sizeof(buf) - 1);
     if (strlen(buf) != 1 || buf[0] < '0' || buf[0] > '2') {
-        mvprintw(14, 5, "그런 말은 선택지에 없습니다. * 아무 키나 누르세요... *");
+        mvprintw(y + 8, get_centered_x("그런 말은 선택지에 없습니다. * 아무 키나 누르세요... *"),
+                 "그런 말은 선택지에 없습니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
     choice = buf[0] - '0';
 
-    mvprintw(14, 5, "베팅 금액을 입력하세요: ");
+    mvprintw(y + 8, get_centered_x("베팅 금액을 입력하세요: ")-3, "베팅 금액을 입력하세요: ");
     getnstr(buf, sizeof(buf) - 1);
     bet = atoi(buf);
     if (bet <= 0 || bet > *money) {
-        mvprintw(16, 5, "잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
+        mvprintw(y + 10, get_centered_x("잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *"),
+                 "잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
 
@@ -70,6 +77,8 @@ void play_race_game(int sock, int *money) {
 
     const char *horse_names[3] = {"🐎", "🎠", "🐪"};
     int finish_line = 50;
+    int screen_mid = getmaxx(stdscr) / 2;
+    int track_start = screen_mid - finish_line / 2;
 
     while (1) {
         RaceStepResponse step;
@@ -78,10 +87,11 @@ void play_race_game(int sock, int *money) {
 
         clear(); box(stdscr, 0, 0);
         for (int i = 0; i < 3; i++) {
-            int x = step.horse_positions[i] < finish_line ? step.horse_positions[i] : finish_line;
-            mvprintw(2 + i * 3, 2 + x, "%s", horse_names[i]);
-            mvprintw(2 + i * 3 + 1, 2 + finish_line, "| END");
-            mvhline(2 + i * 3 + 2, 2, '-', finish_line + 5);
+            int x = step.horse_positions[i];
+            if (x > finish_line) x = finish_line;
+            mvprintw(2 + i * 3, track_start + x, "%s", horse_names[i]);
+            mvprintw(2 + i * 3 + 1, track_start + finish_line + 1, "| END");
+            mvhline(2 + i * 3 + 2, track_start, '-', finish_line + 6);
         }
 
         refresh();
@@ -91,14 +101,16 @@ void play_race_game(int sock, int *money) {
     RaceResultResponse res;
     recv(sock, &res, sizeof(res), 0);
 
-    mvprintw(14, 5, "🏁경기 종료!");
-    mvprintw(15, 5, "당신이 선택한 말: %s (말 %d)", horse_names[res.user_choice], res.user_choice);
-    mvprintw(16, 5, "승리한 말: %s (말 %d)", horse_names[res.winner], res.winner);
-    mvprintw(17, 5, "배당률: %dG", res.payout);
-    mvprintw(18, 5, "경기 종료 후 잔고: %dG", res.new_money);
+    clear(); box(stdscr, 0, 0);
+    int ry = get_centered_y(8);
+    mvprintw(ry, get_centered_x("🏁 경기 종료!"), "🏁 경기 종료!");
+    mvprintw(ry + 2, get_centered_x("당신이 선택한 말: 🐎"), "당신이 선택한 말: %s (말 %d)", horse_names[res.user_choice], res.user_choice);
+    mvprintw(ry + 3, get_centered_x("승리한 말: 🐎"), "승리한 말: %s (말 %d)", horse_names[res.winner], res.winner);
+    mvprintw(ry + 4, get_centered_x("배당률: 000G"), "배당률: %dG", res.payout);
+    mvprintw(ry + 5, get_centered_x("경기 종료 후 잔고: 0000G"), "경기 종료 후 잔고: %dG", res.new_money);
     *money = res.new_money;
 
-    mvprintw(20, 5, "* 계속하려면 아무 키나 누르세요... *");
+    mvprintw(ry + 7, get_centered_x("* 계속하려면 아무 키나 누르세요... *"), "* 계속하려면 아무 키나 누르세요... *");
     refresh(); getch();
 }
 
@@ -107,19 +119,19 @@ void play_blackjack_game(int sock, int *money) {
     int bet = 0;
 
     echo(); clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "🃏 블랙잭 테이블에 온 걸 환영해! 🃏");
-    mvprintw(4, 5, "규칙은 알지? 총합이 21을 넘지 않고 더 높은 사람이 승자야!");
-    mvprintw(6, 5, "잔고 : [%dG]", *money);
-    mvprintw(8, 5, "베팅 금액을 입력하세요 : ");
+    int y = get_centered_y(10);
+    mvprintw(y, get_centered_x("🃏 블랙잭 테이블에 온 걸 환영해! 🃏"), "🃏 블랙잭 테이블에 온 걸 환영해! 🃏");
+    mvprintw(y + 2, get_centered_x("규칙은 알지? 총합이 21을 넘지 않고 더 높은 사람이 승자야!"), "규칙은 알지? 총합이 21을 넘지 않고 더 높은 사람이 승자야!");
+    mvprintw(y + 4, get_centered_x("잔고 : [0000G]"), "잔고 : [%dG]", *money);
+    mvprintw(y + 6, get_centered_x("베팅 금액을 입력하세요 : "), "베팅 금액을 입력하세요 : ");
     getstr(buf); bet = atoi(buf);
     noecho();
 
     if (bet <= 0 || bet > *money) {
-        mvprintw(10, 5, "잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
+        mvprintw(y + 8, get_centered_x("잘못된 금액입니다. * 아무 키나 누르세요... *"), "잘못된 금액입니다. * 아무 키나 누르세요... *");
         getch(); return;
     }
 
-    // 서버로 게임 시작 요청s
     CommandType cmd = CMD_BLACKJACK_REQ;
     send(sock, &cmd, sizeof(cmd), 0);
     BlackjackRequest req = { .cmd = CMD_BLACKJACK_REQ, .bet = bet };
@@ -128,108 +140,97 @@ void play_blackjack_game(int sock, int *money) {
     BlackjackResponse res;
     recv(sock, &res, sizeof(res), 0);
 
-    int player_score = res.player_score;
-
     while (1) {
         clear(); box(stdscr, 0, 0);
-        mvprintw(1, 5, "자. 너가 뽑은 카드야!");
-        draw_big_number(player_score, 2, 5);
-        mvprintw(8, 5, "총합: %d", player_score);
-
-        mvprintw(10, 5, "[h] 한 장 더!  [s] 스톱!!!");
+        mvprintw(y, get_centered_x("방금 뽑은 카드"), "방금 뽑은 카드");
+        draw_big_number(res.last_card, y + 2, get_centered_x("     "));
+        mvprintw(y + 8, get_centered_x("총합: 00"), "총합: %d", res.player_score);
+        mvprintw(y + 10, get_centered_x("[h] 한 장 더!  [s] 스톱!!!"), "[h] 한 장 더!  [s] 스톱!!!");
         refresh();
-        char choice = getch();
 
+        char choice = getch();
         if (choice == 'h') {
             cmd = CMD_BLACKJACK_HIT;
             send(sock, &cmd, sizeof(cmd), 0);
             recv(sock, &res, sizeof(res), 0);
-            player_score = res.player_score;
-
             if (res.is_final) break;
-
         } else if (choice == 's') break;
     }
+
     cmd = CMD_BLACKJACK_RESULT;
     send(sock, &cmd, sizeof(cmd), 0);
     recv(sock, &res, sizeof(res), 0);
-
-    // 최종 결과 화면
-    clear(); box(stdscr, 0, 0);
-    mvprintw(1, 5, "[결과]");
-    draw_big_number(res.player_score, 2, 5);
-    mvprintw(8, 5, "너의 총합: %d", res.player_score);
-
-    mvprintw(1, 35, "[딜러]");
-    draw_big_number(res.dealer_score, 2, 35);
-    mvprintw(8, 35, "딜러의 총합: %d", res.dealer_score);
-
-    // 딜러가 뽑은 카드 하나씩 보여주기
-    int drow = 10;
-    mvprintw(drow++, 35, "내가 뽑은 카드들이야:");
-    for (int i = 0; i < res.dealer_card_count; i++) {
-        mvprintw(drow++, 37, "- 카드 %d: %d", i + 1, res.dealer_cards[i]);
-    }
-
-    // 메시지 분기
-    const char *reason_msg = "";
-    if (res.player_score > 21)
-        reason_msg = "뭐야 21을 넘겼구나! 소고기 맛있게 먹을게~!";
-    else if (res.dealer_score > 21)
-        reason_msg = "... 내가 21을 넘겼네. 흐름 탔으니까 한 판 더 해야지?";
-    else if (res.player_score == res.dealer_score)
-        reason_msg = "숫자가 똑같네? 재미없게";
-    else if (res.player_score > res.dealer_score)
-        reason_msg = "나보다 숫자가 높네? 너가 이겼어..";
-    else
-        reason_msg = "점수 차 보이지? 사장님보다 너가 돈을 더 챙겨주네 ㅎㅎ";
-
-    // 결과/자산 반영
     *money = res.new_money;
 
-    mvprintw(drow + 1, 5, "%s", reason_msg);
-    mvprintw(drow + 2, 5, "(결과: %s)", res.win == 1 ? "승리" : (res.win == 2 ? "무승부" : "패배"));
-    mvprintw(drow + 4, 5, "최종 자산: %dG", *money);
-    mvprintw(drow + 6, 5, "* 계속하려면 아무 키나 누르세요... *");
+    clear(); box(stdscr, 0, 0);
+    int screen_mid = getmaxx(stdscr) / 2;
+    y = 4;
+    mvprintw(y, get_centered_x("🔢 결과 발표 🔢"), "🔢 결과 발표 🔢");
+
+    mvprintw(y + 2, screen_mid - 20, "[ YOU ]");
+    draw_big_number(res.player_score, y + 4, screen_mid - 20);
+    mvprintw(y + 10, screen_mid - 20, "너의 총합: %d", res.player_score);
+
+    mvprintw(y + 2, screen_mid + 10, "[ DEALER ]");
+    draw_big_number(res.dealer_score, y + 4, screen_mid + 10);
+    mvprintw(y + 10, screen_mid + 10, "딜러의 총합: %d", res.dealer_score);
+
+    const char *reason_msg = (res.player_score > 21) ? "뭐야 21을 넘겼구나! 소고기 맛있게 먹을게~!" :
+                             (res.dealer_score > 21) ? "... 내가 21을 넘겼네. 흐름 탔으니까 한 판 더 해야지?" :
+                             (res.player_score == res.dealer_score) ? "숫자가 똑같네? 재미없게" :
+                             (res.player_score > res.dealer_score) ? "나보다 숫자가 높네? 너가 이겼어.." :
+                             "점수 차 보이지? 사장님보다 너가 돈을 더 챙겨주네 ㅎㅎ";
+
+    mvprintw(y + 13, get_centered_x(reason_msg), "%s", reason_msg);
+    mvprintw(y + 14, get_centered_x("(결과: 승/무/패)"), "(결과: %s)", res.win == 1 ? "승리" : (res.win == 2 ? "무승부" : "패배"));
+    mvprintw(y + 16, get_centered_x("최종 자산: 0000000G"), "최종 자산: %dG", *money);
+    mvprintw(y + 18, get_centered_x("* 계속하려면 아무 키나 누르세요... *"), "* 계속하려면 아무 키나 누르세요... *");
     refresh(); getch();
 }
 
 void play_highlow_game(int sock, int *money) {
-    echo();
     char buf[32];
     int bet = 0;
-    char guess = 0;
+    int highlight = 0;
+    const char *guess_options[] = {"높을 것이다 (H)", "낮을 것이다 (L)"};
 
-    // 1) TUI로 배팅 입력
-    clear(); box(stdscr,0,0);
-    mvprintw(2, 5, "🔢 하이 앤 로우 테이블에 온 걸 환영해! 🔢");
-    mvprintw(4, 5, "내가 숫자를 줄 테니 나보다 높을지 낮을지 맞혀 봐~");
-    mvprintw(6,5,"잔고 : [%dG]", *money);
-    mvprintw(8,5,"베팅 금액을 입력하세요 : ");
+    echo(); clear(); box(stdscr, 0, 0);
+    int y = get_centered_y(10);
+    mvprintw(y, get_centered_x("🔢 하이 앤 로우 테이블에 온 걸 환영해! 🔢"), "🔢 하이 앤 로우 테이블에 온 걸 환영해! 🔢");
+    mvprintw(y + 2, get_centered_x("내가 숫자를 줄 테니 나보다 높을지 낮을지 맞혀 봐~"), "내가 숫자를 줄 테니 나보다 높을지 낮을지 맞혀 봐~");
+    mvprintw(y + 4, get_centered_x("잔고 : [0000G]"), "잔고 : [%dG]", *money);
+    mvprintw(y + 6, get_centered_x("베팅 금액을 입력하세요 : "), "베팅 금액을 입력하세요 : ");
     getstr(buf);
     bet = atoi(buf);
     if (bet <= 0 || bet > *money) {
-        mvprintw(10,5,"잘못된 금액이거나 당신의 잔고를 초과한 금액입니다. * 아무 키나 누르세요... *");
-        getch();
-        return;
+        mvprintw(y + 8, get_centered_x("잘못된 금액입니다. * 아무 키나 누르세요... *"), "잘못된 금액입니다. * 아무 키나 누르세요... *");
+        getch(); return;
     }
-
-    // 2) TUI로 H/L 입력
-    mvprintw(10,5,"오케이! 이제 한 번 맞춰봐");
-    mvprintw(11,5,"[h] 높지 않을까? or [l] 낮을 거 같은데..");
-    getstr(buf);
     noecho();
-    refresh();
-    guess = buf[0];
-    if (guess != 'h' && guess != 'l') {
-        mvprintw(12,5,"잘못된 선택입니다. * 아무 키나 누르세요... *");
-        getch();
-        return;
+
+    while (1) {
+        clear(); box(stdscr, 0, 0);
+        mvprintw(y, get_centered_x("🔢 하이 앤 로우 선택"), "🔢 하이 앤 로우 선택");
+        mvprintw(y + 2, get_centered_x("어떻게 될 것 같아?"), "어떻게 될 것 같아?");
+        for (int i = 0; i < 2; i++) {
+            int x = get_centered_x(guess_options[i]);
+            if (i == highlight) {
+                attron(COLOR_PAIR(3) | A_BOLD);
+                mvprintw(y + 4 + i, x - 2, "➤ %s", guess_options[i]);
+                attroff(COLOR_PAIR(3) | A_BOLD);
+            } else {
+                mvprintw(y + 4 + i, x, "%s", guess_options[i]);
+            }
+        }
+        refresh();
+        int ch = getch();
+        if (ch == KEY_UP) highlight = (highlight - 1 + 2) % 2;
+        else if (ch == KEY_DOWN) highlight = (highlight + 1) % 2;
+        else if (ch == '\n') break;
     }
 
-    int guess_num = (guess == 'h') ? 1 : 0; 
+    int guess_num = (highlight == 0) ? 1 : 0;
 
-    // 3) 서버에 “페이로드”로 전송
     CommandType hcmd = CMD_HIGHLOW_REQ;
     send(sock, &hcmd, sizeof(hcmd), 0);
 
@@ -240,100 +241,87 @@ void play_highlow_game(int sock, int *money) {
     };
     send(sock, &req, sizeof(req), 0);
 
-    // 4) 응답 수신
     HighLowResponse res;
     int n = recv(sock, &res, sizeof(res), 0);
-    if (n <= 0 || res.cmd != CMD_HIGHLOW_RES) {
-        return;
-    }
-    clear(); box(stdscr, 0, 0);
-    mvprintw(2, 5, "이건 네 숫자 : %d", res.my_num);      draw_big_number(res.my_num, 4, 5);
-    mvprintw(2, 25, "내 숫자는 이거: %d", res.cpu_num); draw_big_number(res.cpu_num, 4,25);
-    mvprintw(10, 5, "너가 고른 선택 : %c", res.guess_num == 1 ? 'H' : 'L');
-    mvprintw(12, 5, "결과 : %s (%c%dG)    최종 자산 : %dG", res.win?"운이 좋네 네가 이겼어!":"돈은 내가 잠시 맡아둘게 ㅋㅋ", res.win?'+':'-', res.bet, res.new_money);
-    mvprintw(16, 5, "* 아무 키나 누르세요... *");
+    if (n <= 0 || res.cmd != CMD_HIGHLOW_RES) return;
 
     *money = res.new_money;
 
-    // 5) 아무 키나 누르면 종료
+    clear(); box(stdscr, 0, 0);
+    int row = get_centered_y(12);
+    int screen_mid = getmaxx(stdscr) / 2;
+
+    mvprintw(row, get_centered_x("🔢 결과 발표 🔢"), "🔢 결과 발표 🔢");
+    mvprintw(row + 2, screen_mid - 20, "[ YOU ]");
+    draw_big_number(res.my_num, row + 3, screen_mid - 20);
+    mvprintw(row + 2, screen_mid + 10, "[ DEALER ]");
+    draw_big_number(res.cpu_num, row + 3, screen_mid + 10);
+
+    mvprintw(row + 9, get_centered_x("너가 고른 선택 : 높음 (H)"), "너가 고른 선택 : %s", guess_num == 1 ? "높음 (H)" : "낮음 (L)");
+
+    char result_msg[128];
+    sprintf(result_msg, "결과 : %s (%c%dG)    최종 자산 : %dG",
+            res.win ? "운이 좋네 네가 이겼어!" : "돈은 내가 잠시 맡아둘게 ㅋㅋ",
+            res.win ? '+' : '-', res.bet, res.new_money);
+    mvprintw(row + 11, get_centered_x(result_msg), "%s", result_msg);
+
+    mvprintw(row + 13, get_centered_x("* 아무 키나 누르세요... *"), "* 아무 키나 누르세요... *");
     refresh(); getch();
 }
 
 void start_casino_game(int sock, int *user_money) {
-    int choice = 0;
+    const char *options[] = {"하이 앤 로우 게임", "블랙잭 게임", "경마 게임", "게임 규칙 설명", "로비로 나가기"};
+    int highlight = 0;
     while (1) {
-        clear();
-        box(stdscr, 0, 0);
-        mvprintw(1, 2, "🎰 카지노에 온 것을 환영합니다 🎰");
+        clear(); box(stdscr, 0, 0);
+        int y = get_centered_y(10);
+        mvprintw(y, get_centered_x("🎰 카지노에 온 것을 환영합니다 🎰"), "🎰 카지노에 온 것을 환영합니다 🎰");
 
         if (*user_money < 1) {
-            mvprintw(3, 2, "이런, 도박할 돈이 없네요. 노동장에서 돈을 벌어보세요.");
-            mvprintw(5, 2, "* 로비로 돌아가려면 아무 키나 누르세요... *");
-            refresh();
-            getch();
-            return;
+            mvprintw(y + 2, get_centered_x("이런, 도박할 돈이 없네요. 노동장에서 돈을 벌어보세요."), "이런, 도박할 돈이 없네요. 노동장에서 돈을 벌어보세요.");
+            mvprintw(y + 4, get_centered_x("* 로비로 돌아가려면 아무 키나 누르세요... *"), "* 로비로 돌아가려면 아무 키나 누르세요... *");
+            refresh(); getch(); return;
         }
 
-        mvprintw(3, 2, "잔고: $%d", *user_money);
-        mvprintw(5, 2, "[1] 하이 앤 로우 게임");
-        mvprintw(6, 2, "[2] 블랙잭 게임");
-        mvprintw(7, 2, "[3] 경마 게임");
-        mvprintw(8, 2, "[4] 게임 규칙 설명");
-        mvprintw(9, 2, "[Q] 로비로 나가기");
-        mvprintw(11, 2, "→ 선택지를 입력하세요: ");
-        char buf[8];
-        echo();
-        getstr(buf);
-        noecho();
+        mvprintw(y + 2, get_centered_x("잔고: 0000G"), "잔고: %dG", *user_money);
+        for (int i = 0; i < 5; i++) {
+            int x = get_centered_x(options[i]);
+            if (i == highlight) {
+                attron(COLOR_PAIR(1) | A_BOLD);
+                mvprintw(y + 4 + i, x - 2, "➤ %s", options[i]);
+                attroff(COLOR_PAIR(1) | A_BOLD);
+            } else {
+                mvprintw(y + 4 + i, x, "%s", options[i]);
+            }
+        }
         refresh();
-
-        // 🔍 Q/q 입력 시 종료 처리
-        if (strlen(buf) == 1 && (buf[0] == 'q' || buf[0] == 'Q')) {
-            return;
-        }
-
-        choice = atoi(buf);
-        switch (choice) {
-            case 1:
-                play_highlow_game(sock, user_money);
-                break;
-            case 2:
-                play_blackjack_game(sock, user_money);
-                break;
-            case 3:
-                play_race_game(sock, user_money);
-                break;
-            case 4:
-                clear();
-                box(stdscr, 0, 0);
-                mvprintw(1, 2, "[ 🎮 게임 규칙 설명서 ]");
-
-                // High & Low
-                mvprintw(3, 2, "① 하이⤴️  & 로우⤵️ (난이도: 하)");
-                mvprintw(4, 4, "- 당신의 숫자가 딜러의 숫자보다 클 지, 작을 지 맞히는 게임입니다.");
-                mvprintw(5, 4, "- 숫자는 1부터 100 사이에서 무작위로 생성됩니다.");
-
-                // Blackjack
-                mvprintw(8, 2, "② 블랙잭 🃏 (난이도: 중)");
-                mvprintw(9, 4, "- 당신과 딜러가 카드를 뽑으며 21에 가까운 수를 만드는 게임입니다.");
-                mvprintw(10, 4, "- 점수가 21을 넘으면 즉시 패배합니다.");
-                mvprintw(11, 4, "- 딜러보다 높고 21 이하일 경우 승리하여 보상을 얻습니다.");
-
-                // Race (경마)
-                mvprintw(14, 2, "③ 경마 🐎 (난이도: 상)");
-                mvprintw(15, 4, "- 승률이 다른 3마리의 말 중 하나를 선택합니다.");
-                mvprintw(16, 4, "- 선택한 말이 1등으로 도착하면 배당률에 따라 보상을 받습니다.");
-                mvprintw(17, 4, "- 승률이 낮을 말일수록 이겼을 때의 보상이 큽니다.");
-
-                mvprintw(20, 2, "* 아무 키나 눌러서 메인 메뉴로 돌아가세요... *");
-                refresh();
-                getch();
-                break;
-            default:
-                mvprintw(13, 2, "잘못된 입력입니다. 다시 입력하세요. ");
-                refresh();
-                getch();
-                break;
+        int ch = getch();
+        if (ch == KEY_UP) highlight = (highlight - 1 + 5) % 5;
+        else if (ch == KEY_DOWN) highlight = (highlight + 1) % 5;
+        else if (ch == '\n') {
+            switch (highlight) {
+                case 0: play_highlow_game(sock, user_money); break;
+                case 1: play_blackjack_game(sock, user_money); break;
+                case 2: play_race_game(sock, user_money); break;
+                case 3:
+                    clear(); box(stdscr, 0, 0);
+                    int yy = get_centered_y(20);
+                    mvprintw(yy, get_centered_x("[ 🎮 게임 규칙 설명서 ]"), "[ 🎮 게임 규칙 설명서 ]");
+                    mvprintw(yy + 2, 4, "① 하이⤴️  & 로우⤵️ (난이도: 하)");
+                    mvprintw(yy + 3, 6, "- 당신의 숫자가 딜러의 숫자보다 클 지, 작을 지 맞히는 게임입니다.");
+                    mvprintw(yy + 4, 6, "- 숫자는 1부터 100 사이에서 무작위로 생성됩니다.");
+                    mvprintw(yy + 6, 4, "② 블랙잭 🃏 (난이도: 중)");
+                    mvprintw(yy + 7, 6, "- 당신과 딜러가 카드를 뽑으며 21에 가까운 수를 만드는 게임입니다.");
+                    mvprintw(yy + 8, 6, "- 점수가 21을 넘으면 즉시 패배합니다.");
+                    mvprintw(yy + 9, 6, "- 딜러보다 높고 21 이하일 경우 승리하여 보상을 얻습니다.");
+                    mvprintw(yy + 11, 4, "③ 경마 🐎 (난이도: 상)");
+                    mvprintw(yy + 12, 6, "- 승률이 다른 3마리의 말 중 하나를 선택합니다.");
+                    mvprintw(yy + 13, 6, "- 선택한 말이 1등으로 도착하면 배당률에 따라 보상을 받습니다.");
+                    mvprintw(yy + 14, 6, "- 승률이 낮을 말일수록 이겼을 때의 보상이 큽니다.");
+                    mvprintw(yy + 16, get_centered_x("* 아무 키나 눌러서 메인 메뉴로 돌아가세요... *"), "* 아무 키나 눌러서 메인 메뉴로 돌아가세요... *");
+                    refresh(); getch(); break;
+                case 4: return;
+            }
         }
     }
 }

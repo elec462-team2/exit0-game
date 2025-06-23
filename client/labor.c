@@ -9,8 +9,8 @@
 #include <time.h>
 #include <ctype.h>
 #include "../include/protocol.h"
+#include "../include/client_api.h"
 
-// *** burger_game용 함수, 변수 선언
 void update_user_asset(const char *userid, int new_balance);
 extern char global_user_id[MAX_ID_LEN];
 
@@ -22,7 +22,6 @@ const char *ingredients[MAX_INGREDIENTS] = {
 };
 
 
-// ***package_game용 함수, 변수 선언
 #define REGION_COUNT 18
 
 extern char global_user_id[MAX_ID_LEN];
@@ -48,7 +47,6 @@ void show_region_mapping(int row, int col) {
     mvprintw(row+4, col, "[E] 창고: 제주, 서귀포");
 }
 
-// 햄버거 게임 
 void start_burger_game(int *money, int sock) {
     extern char global_user_id[MAX_ID_LEN];
     int running = 1;
@@ -203,48 +201,35 @@ void start_package_game(int *money, int sock) {
     endwin();
 }
 
-void start_labor_game(int sock, int *user_money) {
-    int work_choice = 0;
+int start_labor_game(int sock, int *money) {
+    const char *options[] = {"햄버거 만들기 알바 시작하기", "택배 분류 알바 시작하기", "메인 메뉴로 나가기"};
+    int highlight = 0;
 
     while (1) {
-        clear();
-        box(stdscr, 0, 0);
-        mvprintw(2, 4, "노동장에 왔으면 성실하게 일을 해야 합니다.");
-        mvprintw(4, 6, "[1] 햄버거 만들기 알바 시작하기");
-        mvprintw(5, 6, "[2] 택배 분류 알바 시작하기");
-        mvprintw(6, 6, "[Q] 메인 메뉴로 나가기");
-        
-        mvprintw(8, 4, "선택지를 입력하세요: ");
+        clear(); box(stdscr, 0, 0);
+        int y = get_centered_y(6);
+        mvprintw(y, get_centered_x("노동장에 왔으면 성실하게 일을 해야 합니다."), "노동장에 왔으면 성실하게 일을 해야 합니다.");
+        for (int i = 0; i < 3; i++) {
+            int x = get_centered_x(options[i]);
+            if (i == highlight) {
+                attron(COLOR_PAIR(2) | A_BOLD);
+                mvprintw(y + 2 + i, x - 2, "➤ %s", options[i]);
+                attroff(COLOR_PAIR(2) | A_BOLD);
+            } else {
+                mvprintw(y + 2 + i, x, "%s", options[i]);
+            }
+        }
         refresh();
 
-        // 입력 후에 enter 눌러야 화면 전환
-        char input[10];
-        echo();
-        getstr(input);  // 문자열로 입력받고 엔터 대기
-        noecho();
-
-        if (input[0] == 'q' || input[0] == 'Q') 
-            return;
-        
-        if (strlen(input) == 1 && input[0] >= '1' && input[0] <= '2') 
-            work_choice = input[0] - '0';
-
-        if (input[0] != 'q' && input[0] != 'Q' && input[0] != '1' && input[0] != '2') 
-            work_choice = 3;
-        
-
-        switch (work_choice) {
-            case 1:
-                start_burger_game(user_money, sock);
-                break;
-            case 2:
-                start_package_game(user_money, sock);
-                break;
-            case 3:
-                mvprintw(13, 2, "잘못된 입력입니다. * 아무 키나 누르세요 *");
-                refresh();
-                getch();
-                break;
+        int ch = getch();
+        if (ch == KEY_UP) highlight = (highlight - 1 + 3) % 3;
+        else if (ch == KEY_DOWN) highlight = (highlight + 1) % 3;
+        else if (ch == '\n') {
+            switch (highlight) {
+                case 0: start_burger_game(money, sock); break;
+                case 1: start_package_game(money, sock); break;
+                case 2: return -1; // 메인 메뉴로 돌아가기
+            }
         }
     }
 }

@@ -39,9 +39,18 @@ void handle_chat(int client_sock, const char *userid, CommandType cmd) {
             .message_count = 0
         };
         
-        // 내 메시지함 경로
         char path[128];
         snprintf(path, sizeof(path), "%s/%s.txt", CHAT_DIR, userid);
+
+        if (strcmp(userid, "temp") == 0) {
+            ChatInboxResponse res = {
+                .cmd = CMD_CHAT_INBOX_RES,
+                .message_count = 0
+            };
+            send(client_sock, &res.cmd, sizeof(CommandType), 0);
+            send(client_sock, &res.message_count, sizeof(int), 0);
+            return;
+        }
         FILE *fp = fopen(path, "r");
         if (fp) {
             char line[MAX_MSG_LEN + MAX_ID_LEN + 2];
@@ -52,7 +61,6 @@ void handle_chat(int client_sock, const char *userid, CommandType cmd) {
                 strcpy(res.messages[res.message_count].from, line);
                 strncpy(res.messages[res.message_count].content, sep + 1, MAX_MSG_LEN);
 
-                // 줄 끝 개행 제거
                 size_t len = strlen(res.messages[res.message_count].content);
                 if (len > 0 && res.messages[res.message_count].content[len - 1] == '\n')
                     res.messages[res.message_count].content[len - 1] = '\0';
@@ -60,7 +68,9 @@ void handle_chat(int client_sock, const char *userid, CommandType cmd) {
                 res.message_count++;
             }
             fclose(fp);
-            remove(path);  // 읽은 후 삭제
+            if (strcmp(userid, "temp") != 0) {
+                remove(path);
+            }
         }
 
         send(client_sock, &res.cmd, sizeof(CommandType), 0);

@@ -13,4 +13,9 @@ void start_casino_game(int sock, int *user_money);
 void start_burger_game(int *money, int sock);
 void start_package_game(int *money, int sock);
 
+//tui 화면
+int get_display_width(const char *str);
+int get_centered_x(const char *text);
+int get_centered_y(int lines);
+
 #endif

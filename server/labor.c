@@ -69,7 +69,6 @@ void handle_burger_game(int client_sock, const char *userid) {
 
     // 👇 종료 신호 감지: "Q" 입력 시 바로 리턴
     if (strcmp(answer.input, "Q") == 0) {
-        printf("[SERVER] BurgerGame: %s quit.\n", userid);
         return;
     }
 
@@ -120,7 +119,6 @@ void handle_package_game(int client_sock, const char *userid) {
 
     // 👇 Q 누른 경우 처리: 바로 리턴
     if (toupper(answer.answer) == 'Q') {
-        printf("[SERVER] PackageGame: %s quit.\n", userid);
         return;
     }
 
@@ -140,8 +138,4 @@ void handle_package_game(int client_sock, const char *userid) {
         .correct_answer = selected.center
     };
     send(client_sock, &result, sizeof(result), 0);
-
-    printf("[SERVER] PackageGame: %s → %s (%c), 입력: %c → %s\n",
-           userid, selected.region, selected.center,
-           answer.answer, correct ? "정답" : "오답");
 }

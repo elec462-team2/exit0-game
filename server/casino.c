@@ -39,6 +39,15 @@ void handle_race_game(int client_sock, const char *userid) {
 
     srand(time(NULL) ^ getpid());
 
+    int finished = 0;
+    RaceStepResponse step = {
+        .cmd = CMD_RACE_STEP,
+        .finished = finished
+    };
+    memcpy(step.horse_positions, positions, sizeof(positions));
+    send(client_sock, &step, sizeof(step), 0);    
+    sleep(1);
+
     while (1) {
         for (int i = 0; i < 3; ++i) {
             positions[i] += prob[i][rand() % 10];
@@ -60,7 +69,7 @@ void handle_race_game(int client_sock, const char *userid) {
         send(client_sock, &step, sizeof(step), 0);
 
         if (finished) break;
-        sleep(2);
+        sleep(1);
     }
 
     int payout = 0;
@@ -85,24 +94,21 @@ void handle_race_game(int client_sock, const char *userid) {
         .new_money = new_money
     };
     send(client_sock, &res, sizeof(res), 0);
-
-    printf("[SERVER] Race finished: winner=%d, user pick=%d, payout=%d, final=%d\n",
-           winner, selected, payout, new_money);
 }
 
 void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd) {
     static BlackjackSession session = {0};
 
     if (cmd == CMD_BLACKJACK_REQ) {
-        session.player_score = rand() % 11 + 1 + rand() % 11 + 1;
+        // 플레이어 카드 초기화
+        int c1 = rand() % 11 + 1;
+        session.player_score = c1;
 
         // 딜러 카드 초기화
         session.dealer_card_count = 0;
         int d1 = rand() % 11 + 1;
-        int d2 = rand() % 11 + 1;
         session.dealer_cards[session.dealer_card_count++] = d1;
-        session.dealer_cards[session.dealer_card_count++] = d2;
-        session.dealer_score = d1 + d2;
+        session.dealer_score = d1;
         session.finished = 0;
 
         BlackjackRequest req;
@@ -112,10 +118,11 @@ void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd)
         BlackjackResponse res = {
             .cmd = CMD_BLACKJACK_RES,
             .player_score = session.player_score,
-            .dealer_score = d1,  // 한 장만 공개
+            .dealer_score = d1,
             .win = -1,
             .is_final = 0,
-            .dealer_card_count = 1
+            .dealer_card_count = 1,
+            .last_card = c1
         };
         res.dealer_cards[0] = d1;
         send(client_sock, &res, sizeof(res), 0);
@@ -130,17 +137,17 @@ void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd)
         BlackjackResponse res = {
             .cmd = CMD_BLACKJACK_RES,
             .player_score = session.player_score,
-            .dealer_score = session.dealer_cards[0], // 여전히 한 장만
+            .dealer_score = session.dealer_cards[0],
             .win = 0,
             .is_final = is_final,
-            .dealer_card_count = 1
+            .dealer_card_count = 1,
+            .last_card = card
         };
         res.dealer_cards[0] = session.dealer_cards[0];
         send(client_sock, &res, sizeof(res), 0);
     }
 
     else if (cmd == CMD_BLACKJACK_RESULT) {
-        // 딜러 카드 계속 뽑기
         while (session.dealer_score < 17 && session.dealer_card_count < MAX_CARDS) {
             int card = rand() % 11 + 1;
             session.dealer_cards[session.dealer_card_count++] = card;
@@ -166,7 +173,8 @@ void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd)
             .bet = session.bet,
             .new_money = new_money,
             .is_final = 1,
-            .dealer_card_count = session.dealer_card_count
+            .dealer_card_count = session.dealer_card_count,
+            .last_card = -1 // ✨ 마지막엔 카드 새로 안 뽑으니까 무시해도 됨
         };
         memcpy(res.dealer_cards, session.dealer_cards, sizeof(int) * session.dealer_card_count);
         send(client_sock, &res, sizeof(res), 0);
