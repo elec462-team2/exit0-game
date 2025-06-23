@@ -91,6 +91,40 @@ int connect_to_server(const char *ip, int port) {
     return sock;
 }
 
+void draw_background_decor() {
+    int row, col;
+    getmaxyx(stdscr, row, col);
+
+    // 왼쪽 노동 이모지
+    mvprintw(4, 4,  "🛠");
+    mvprintw(7, 12,  "💼");
+    mvprintw(12, 8,  "🧱");
+    mvprintw(16, 15,  "🧤");
+    mvprintw(20, 11, "🧹");
+
+    // 오른쪽 도박 이모지
+    mvprintw(4, 93, "🎰");
+    mvprintw(7, 83, "💸");
+    mvprintw(13, 89, "🎲");
+    mvprintw(17, 80, "🃏");
+    mvprintw(22, 87,"♠");
+
+    // 중앙 떠다니는 이모지 (장식용)
+    mvprintw(1, 11,  "✦");
+    mvprintw(18, 25,  "✦");
+    mvprintw(15, 4,  "✨");
+    mvprintw(23, 20,  "★");
+    mvprintw(1, 85,  "★");
+    mvprintw(18, 95,  "★");
+    mvprintw(9, 94, "✦");
+    mvprintw(19, 70, "✨");
+
+    // 하단 타이틀
+    attron(COLOR_PAIR(4));
+    mvprintw(row - 2, (col - strlen("ⓒ 2025 EXIT0팀 - 한탕의 꿈")) / 2, "ⓒ 2025 EXIT0팀 - 한탕의 꿈");
+    attroff(COLOR_PAIR(4));
+}
+
 void draw_title(void) {
     const char *title[] = {
         "    ██╗    █╗   ██████║ █╗       ███╗    █╗      █████████╗   ",
@@ -114,6 +148,7 @@ void draw_title(void) {
         if (x < 0) x = 0;
         mvprintw(i + 2, x, "%s", title[i]);
     }
+    draw_background_decor();
 }
 
 int show_tui_main_menu(void) {
