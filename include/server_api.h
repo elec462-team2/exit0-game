@@ -15,6 +15,10 @@ void update_user_asset(const char *userid, int new_balance);
 void handle_labor_game(int client_sock, const char *userid);
 void handle_casino_game(int client_sock, const char *userid);
 
+// 노동
+void handle_burger_game(int client_sock, const char *userid);
+void handle_package_game(int client_sock, const char *userid);
+
 // 채팅
 void handle_chat(int client_sock, const char *userid, CommandType cmd);
 

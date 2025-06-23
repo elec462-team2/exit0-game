@@ -10,7 +10,7 @@
 #include "../include/client_api.h"
 
 extern void start_casino_game(int sock, int *user_money);
-extern void start_burger_game(int *money, int sock);
+extern void start_labor_game(int sock, int *user_money);
 extern void enter_chat_menu(int sock);
 extern void draw_title_screen();  // 새로 추가한 타이틀 화면 함수
 void show_ranking();
@@ -181,33 +181,6 @@ static int show_post_login_menu(void) {
     return 0;
 }
 
-// 노동장 진입 후 노동 선택
-static int show_work_menu(void) {
-    clear(); box(stdscr, 0, 0);
-    mvprintw(2, 4, "노동장에 왔으면 성실하게 일을 해야 합니다.");
-    mvprintw(4, 6, "[1] 햄버거 만들기 알바 시작하기");
-    mvprintw(5, 6, "[2] 택배 분류 알바 시작하기");
-    mvprintw(6, 6, "[Q] 메인 메뉴로 나가기");
-    
-    mvprintw(8, 4, "선택지를 입력하세요: ");
-    refresh();
-
-    // 입력 후에 enter 눌러야 화면 전환
-    char input[10];
-    echo();
-    while (1) {
-        getstr(input);  // 문자열로 입력받고 엔터 대기
-        noecho();
-        if (input[0] == 'q' || input[0] == 'Q') return -1;
-        if (strlen(input) == 1 && input[0] >= '1' && input[0] <= '2')
-            return input[0] - '0';
-        if (input[0] != 'q' && input[0] != 'Q' && input[0] != '1' && input[0] != '2')
-            return 3;
-    }
-
-    return 0;
-}
-
 // run_client 함수
 void run_client(const char *ip, int port) {
     int sock = connect_to_server(ip, port);
@@ -252,26 +225,7 @@ void run_client(const char *ip, int port) {
                 start_casino_game(sock, &user_money);
                 break;
             case 2:
-                {
-                    while (1) {
-                        // 노동장 -> 노동 방법 선택 
-                        int work_choice = show_work_menu();
-                        if (work_choice == -1)  break;
-                        switch (work_choice) {
-                            case 1:
-                                start_burger_game(&user_money, sock);
-                                break;
-                            case 2:
-                                start_package_game(&user_money, sock);
-                                break;
-                            case 3:
-                                mvprintw(13, 2, "잘못된 입력입니다. * 아무 키나 누르세요 *");
-                                refresh();
-                                getch();
-                                break;
-                        }
-                    }
-                }
+                start_labor_game(sock, &user_money);
                 break;
             case 3:
                 show_ranking();
