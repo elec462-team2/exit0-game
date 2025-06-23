@@ -48,7 +48,6 @@ void handle_user_commands(int client_sock, const char *userid) {
                 handle_casino_game(client_sock, userid);
                 money = get_user_asset(userid);
                 update_user_asset(userid, money);
-                printf("[SERVER] %s asset saved after casino: %d\n", userid, money);
                 break;
 
             case CMD_LOGOUT_REQ:
