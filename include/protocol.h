@@ -34,6 +34,7 @@
 #define CMD_BURGER_RES       23
 #define CMD_PACKAGE_REQ      24
 #define CMD_PACKAGE_RES      25
+#define CMD_RANKING_REQ      26
 
 typedef uint32_t CommandType;
 
@@ -217,5 +218,15 @@ typedef struct {
     char message[MAX_MSG_LEN];         // 성공/실패 메시지
 } ChatSendResponse;
 
+// 랭킹 요청
+typedef struct {
+    char id[MAX_ID_LEN];
+    int money;
+} RankingEntry;
+
+typedef struct {
+    RankingEntry entries[10];
+    int count;
+} RankingPacket;
 
 #endif // __PROTOCOL_H__

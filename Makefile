@@ -2,7 +2,7 @@ CC      = gcc
 CFLAGS  = -Wall -Iinclude
 
 CLIENT_SRCS = client/main.c client/login.c client/casino.c client/ranking.c client/chat.c client/labor.c
-SERVER_SRCS = server/main.c server/login.c server/session.c server/casino.c server/chat.c server/labor.c
+SERVER_SRCS = server/main.c server/login.c server/session.c server/casino.c server/chat.c server/labor.c server/ranking.c
 
 CLIENT_EXEC = client_exec
 SERVER_EXEC = server_exec

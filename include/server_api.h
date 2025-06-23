@@ -22,4 +22,7 @@ void handle_package_game(int client_sock, const char *userid);
 // 채팅
 void handle_chat(int client_sock, const char *userid, CommandType cmd);
 
+// 랭킹
+void handle_ranking_request(int client_sock);
+
 #endif // __SERVER_API_H__

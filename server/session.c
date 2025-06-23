@@ -16,6 +16,7 @@ extern void handle_race_game(int client_sock, const char *userid);
 extern void handle_chat(int client_sock, const char *userid, CommandType cmd);
 extern void handle_burger_game(int client_sock, const char *userid);
 extern void handle_package_game(int client_sock, const char *userid);
+extern void handle_ranking_request(int client_sock);
 
 
 void update_user_asset(const char *userid, int new_balance) {
@@ -101,6 +102,9 @@ void handle_user_commands(int client_sock, const char *userid) {
                 printf("[SERVER] %s asset updated: %d\n", req.user_id, req.money);
                 break;
             }
+            case CMD_RANKING_REQ:
+                handle_ranking_request(client_sock);
+                break;
 
             default:
                 break;

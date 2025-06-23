@@ -4,61 +4,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <sys/socket.h>
 #include "../include/protocol.h"
 
-void show_ranking() {
-    clear();
-    box(stdscr, 0, 0);
-    mvprintw(1, 2, "=== 랭크 ===");
+void show_ranking(int sock) {
+    clear(); box(stdscr, 0, 0);
+    mvprintw(1, 2, "=== 📊 사용자 랭킹 ===");
 
-    // 1. 기준 시각 출력
+    // 현재 시각 출력
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
-    char timebuf[64];
-    strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", t);
-    mvprintw(2, 2, "현재 시각: %s", timebuf);
+    char buf[64];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", t);
+    mvprintw(2, 2, "현재 시각: %s", buf);
 
-    // 2. asset_db.txt 읽기
-    FILE *fp = fopen("data/asset_db.txt", "r");
-    if (!fp) {
-        mvprintw(4, 2, "asset 정보를 불러올 수 없습니다.");
-        refresh();
-        getch();
-        return;
+    // 랭킹 요청 전송
+    CommandType cmd = CMD_RANKING_REQ;
+    send(sock, &cmd, sizeof(cmd), 0);
+
+    // 랭킹 수신
+    RankingPacket packet;
+    recv(sock, &packet, sizeof(packet), 0);
+
+    mvprintw(4, 2, " 랭크     ID             자산");
+    mvprintw(5, 2, "-------------------------------");
+    for (int i = 0; i < packet.count; i++) {
+        mvprintw(6 + i, 2, "%2d.     %-11s %8d G",
+                 i + 1, packet.entries[i].id, packet.entries[i].money);
     }
 
-    typedef struct {
-        char id[MAX_ID_LEN];
-        int money;
-    } User;
-
-    User users[1000];
-    int count = 0;
-    while (fscanf(fp, "%19[^:]:%d\n", users[count].id, &users[count].money) == 2) {
-        count++;
-    }
-    fclose(fp);
-
-    // 3. 정렬 (금액 내림차순)
-    for (int i = 0; i < count - 1; i++) {
-        for (int j = i + 1; j < count; j++) {
-            if (users[i].money < users[j].money) {
-                User temp = users[i];
-                users[i] = users[j];
-                users[j] = temp;
-            }
-        }
-    }
-
-    // 4. 상위 30등 출력
-    int limit = count < 10 ? count : 10;
-    mvprintw(4, 2, " 랭크     ID             자산      ");
-    mvprintw(5, 2, "---------------------------------");
-    for (int i = 0; i < limit; i++) {
-        mvprintw(6 + i, 2, "%2d.     %-11s %8d G", i + 1, users[i].id, users[i].money);
-    }
-
-    mvprintw(17, 2, "* 돌아가려면 아무 키나 누르세요... *");
-    refresh();
-    getch();
+    mvprintw(6 + packet.count + 2, 2, "* 돌아가려면 아무 키나 누르세요...");
+    refresh(); getch();
 }
