@@ -168,6 +168,12 @@ void start_package_game(int *money, int sock) {
             mvprintw(16, 2, "종료합니다~");
             refresh();
             getch();
+
+            // 🚨 핵심 수정 부분
+            flushinp();     // 입력 버퍼 제거 (getch() 영향 제거)
+            clear();        // 화면 초기화
+            refresh();      // 초기화 적용
+
             break;
         }
 
@@ -198,6 +204,7 @@ void start_package_game(int *money, int sock) {
         getch();
     }
 
+    curs_set(0);
     endwin();
 }
 
