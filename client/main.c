@@ -11,8 +11,7 @@
 #include "../include/client_api.h"
 
 extern void start_casino_game(int sock, int *user_money);
-extern void start_burger_game(int *money, int sock);
-extern void start_package_game(int *money, int sock);
+extern void start_labor_game(int sock, int *user_money);
 extern void enter_chat_menu(int sock);
 extern int perform_register(int sock);
 extern int perform_login(int sock, int *user_money);
@@ -229,31 +228,6 @@ int show_post_login_menu(void) {
     }
 }
 
-int show_work_menu(void) {
-    const char *options[] = {"햄버거 만들기 알바 시작하기", "택배 분류 알바 시작하기", "메인 메뉴로 나가기"};
-    int highlight = 0;
-    while (1) {
-        clear(); box(stdscr, 0, 0);
-        int y = get_centered_y(6);
-        mvprintw(y, get_centered_x("노동장에 왔으면 성실하게 일을 해야 합니다."), "노동장에 왔으면 성실하게 일을 해야 합니다.");
-        for (int i = 0; i < 3; i++) {
-            int x = get_centered_x(options[i]);
-            if (i == highlight) {
-                attron(COLOR_PAIR(2) | A_BOLD);
-                mvprintw(y + 2 + i, x - 2, "➤ %s", options[i]);
-                attroff(COLOR_PAIR(2) | A_BOLD);
-            } else {
-                mvprintw(y + 2 + i, x, "%s", options[i]);
-            }
-        }
-        refresh();
-        int ch = getch();
-        if (ch == KEY_UP) highlight = (highlight - 1 + 3) % 3;
-        else if (ch == KEY_DOWN) highlight = (highlight + 1) % 3;
-        else if (ch == '\n') return (highlight == 2) ? -1 : highlight + 1;
-    }
-}
-
 void run_client(const char *ip, int port) {
     int sock = connect_to_server(ip, port);
     if (sock < 0) {
@@ -303,16 +277,14 @@ void run_client(const char *ip, int port) {
         switch (choice) {
             case 1: start_casino_game(sock, &user_money); break;
             case 2:
-                while (1) {
-                    int work_choice = show_work_menu();
-                    if (work_choice == -1) break;
-                    switch (work_choice) {
-                        case 1: start_burger_game(&user_money, sock); break;
-                        case 2: start_package_game(&user_money, sock); break;
-                    }
-                } break;
-            case 3: show_ranking(); break;
-            case 4: enter_chat_menu(sock); break;
+                start_labor_game(sock, &user_money);
+                break;
+            case 3:
+                show_ranking();
+                break;
+            case 4:
+                enter_chat_menu(sock);
+                break;
         }
     }
     close(sock);

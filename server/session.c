@@ -14,6 +14,9 @@ extern int  get_user_asset(const char *userid);
 extern void handle_blackjack_game(int client_sock, const char *userid, CommandType cmd);
 extern void handle_race_game(int client_sock, const char *userid);
 extern void handle_chat(int client_sock, const char *userid, CommandType cmd);
+extern void handle_burger_game(int client_sock, const char *userid);
+extern void handle_package_game(int client_sock, const char *userid);
+
 
 void update_user_asset(const char *userid, int new_balance) {
     FILE *fp = fopen("data/asset_db.txt", "r");
@@ -68,20 +71,29 @@ void handle_user_commands(int client_sock, const char *userid) {
                 handle_race_game(client_sock, userid);
                 break;
 
+            case CMD_BURGER_REQ:
+            case CMD_BURGER_RES:
+                handle_burger_game(client_sock, userid);
+                break;
+            
+            case CMD_PACKAGE_REQ:
+            case CMD_PACKAGE_RES:
+                handle_package_game(client_sock, userid);
+                break;
+
             case CMD_CHAT_INBOX_REQ:
             case CMD_CHAT_SEND_REQ:
                 handle_chat(client_sock, userid, cmd);
                 break;
             case CMD_UPDATE_ASSET: {
                 AssetUpdateRequest req;
-                // 이미 cmd는 받았으니, 나머지 user_id와 money만 recv
                 ssize_t bytes = recv(client_sock,
                                      ((char*)&req) + sizeof(CommandType),
                                      sizeof(AssetUpdateRequest) - sizeof(CommandType),
                                      0);
                 if (bytes <= 0) break;
 
-                req.cmd = cmd;  // cmd는 앞서 이미 받은 것
+                req.cmd = cmd;
 
                 update_user_asset(req.user_id, req.money);
                 printf("[SERVER] %s asset updated: %d\n", req.user_id, req.money);

@@ -1,4 +1,4 @@
-admin:1355
+admin:697
 jiyun:750
 minji:1200
 kangmu:175
