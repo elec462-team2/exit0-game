@@ -4,15 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <ncurses.h>
+#include <ctype.h>
 #include "../include/server_api.h"
-
-
-static const char *ingredients[] = {
-    "빵", "양상추", "토마토", "패티", "치즈", "양파"
-};
-
-static int last_order_index[8];
-static int last_order_len = 0;
 
 // ***package_game용 함수, 변수 선언
 #define REGION_COUNT 18
