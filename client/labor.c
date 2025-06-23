@@ -53,8 +53,8 @@ void start_burger_game(int *money, int sock) {
 
     while (running) {
         clear();
-        mvprintw(1, 2, "<< 햄빌리버블 버거 가게 >>");
-        mvprintw(3, 2, "버거 만들기 알바 하러 오셨죠? 앞치마 매고 이리오세요~");
+        mvprintw(1, 4, "<< 햄빌리버블 버거 가게 >>");
+        mvprintw(3, 4, "버거 만들기 알바 하러 오셨죠? 앞치마 매고 이리오세요~");
 
         // 1. 게임 시작 요청
         CommandType cmd = CMD_BURGER_REQ;
@@ -70,17 +70,18 @@ void start_burger_game(int *money, int sock) {
 
         // 3. 주문서 출력
         const char *ingredients[] = {"빵", "양상추", "토마토", "패티", "치즈", "양파"};
+        mvprintw(5, 4, "재료 순서입니다. 바르게 넣지 않으면 손님이 화낼 지도 몰라요! :");
         for (int i = 0; i < 6; i++)
-            mvprintw(5 + i, 2, "[%d] %s", i + 1, ingredients[i]);
+            mvprintw(6 + i, 6, "[%d] %s", i + 1, ingredients[i]);
 
-        mvprintw(13, 2, "오늘의 주문:");
+        mvprintw(14, 4, "오늘의 주문:");
         for (int i = 0; i < sheet.order_len; i++)
-            mvprintw(15, 2 + i * 10, "[%s]", sheet.order[i]);
+            mvprintw(15, 6 + i * 8, "[%s]", sheet.order[i]);
 
-        mvprintw(17, 2, "순서에 맞게 재료를 입력하세요 (예시. 1 3 5 ...):");
+        mvprintw(17, 4, "순서에 맞게 재료를 입력하세요 (예시. 1 3 5 ...):");
         echo();
         char input_line[64] = {0};
-        move(18, 2);
+        move(18, 4);
         getnstr(input_line, sizeof(input_line) - 1);
         noecho();
 
@@ -110,19 +111,32 @@ void start_burger_game(int *money, int sock) {
         BurgerResultResponse result;
         recv(sock, &result, sizeof(result), 0);
 
-        if (result.correct)
-            mvprintw(20, 2, "🍔 정답! +%d원 획득!", result.delta_money);
-        else
-            mvprintw(20, 2, "😭 오답! %d원 차감!", result.delta_money);
-
+        clear(); box(stdscr, 0, 0);
         *money = result.updated_money;
-        mvprintw(22, 2, "💰 현재 자산: %d원", *money);
-        mvprintw(24, 2, "계속하려면 Enter, 그만하려면 q 입력");
+        if (result.correct) {
+            mvprintw(3, 4, "\"이 버거, 제 인생을 바꿨어요.\"");
+            mvprintw(6, 4, "✅ 완벽한 버거입니다. 손님도 만족하네요.");
+            mvprintw(8, 4, "[임금 지급] +%d G (총 자산: %d G)", result.delta_money, *money);
+        }
+        else {
+            mvprintw(3, 4, "\"이런 버거 처음 봐! 사장 불러와!\"");
+            mvprintw(6, 4, "❌ 버거가 잘못 나갔네요... 손님이 화났습니다.");
+            mvprintw(8, 4, "[임금 차감] %d G (총 자산: %d G)", result.delta_money, *money);
+        }
+
+        mvprintw(15, 4, "* 메뉴로 나가려면 [Q], 계속 하려면 아무 키나 누르세요... *");
         refresh();
 
         char ch = getch();
         if (tolower(ch) == 'q') break;
     }
+
+    clear(); box(stdscr, 0, 0);
+    mvprintw(4, 4, "오늘 알바 수고했어요. 다음에도 시간 맞춰 와요!");
+    mvprintw(8, 4, "* 아무 키나 누르세요... *");
+    
+    refresh(); getch();
+
 }
 
 void start_package_game(int *money, int sock) {
