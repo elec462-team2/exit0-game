@@ -164,7 +164,7 @@ void start_package_game(int *money, int sock) {
         mvprintw(3, 2, "어서와요, 물류 분류 정확하게 부탁해요. 틀리면 일급 날아가요!");
         show_region_mapping(5, 2);
         mvprintw(11, 2, "목적지: %s", resp.region_info.region);
-        mvprintw(13, 2, "물류 창고 이름을 적으세요 (A~E), * 그만 두려면 [q]: ");
+        mvprintw(13, 2, "물류 창고 이름을 적으세요 (A~E), * 그만 두려면 [q]를 누르세요...* : ");
         refresh();
 
         move(14, 2);
@@ -179,14 +179,11 @@ void start_package_game(int *money, int sock) {
             strcpy(quit.user_id, global_user_id);
             send(sock, &quit, sizeof(quit), 0);
 
-            mvprintw(16, 2, "종료합니다~");
+            mvprintw(16, 2, "그만 가게요? 또 봐요~ ");
+            mvprintw(18, 2, "* 아무 키나 눌러서 나가세요... *");
+
             refresh();
             getch();
-
-            // 🚨 핵심 수정 부분
-            flushinp();     // 입력 버퍼 제거 (getch() 영향 제거)
-            clear();        // 화면 초기화
-            refresh();      // 초기화 적용
 
             break;
         }
@@ -203,6 +200,7 @@ void start_package_game(int *money, int sock) {
         PackageResult result;
         recv(sock, &result, sizeof(result), 0);
 
+        mvprintw(16, 20, "당신의 입력: %c", toupper(ch));
         if (result.correct) {
             *money += result.delta_money;
             mvprintw(16, 2, "정답! +10");
