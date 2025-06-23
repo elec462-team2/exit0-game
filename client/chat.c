@@ -5,10 +5,9 @@
 #include <ncurses.h>
 #include <sys/socket.h>
 #include "../include/protocol.h"
-
+#include "../include/client_api.h"
 extern char global_user_id[MAX_ID_LEN];
 
-// client/chat.c
 void chat_view_inbox(int sock) {
     CommandType cmd = CMD_CHAT_INBOX_REQ;
     send(sock, &cmd, sizeof(cmd), 0);
@@ -69,18 +68,34 @@ void chat_send_message(int sock) {
 }
 
 void enter_chat_menu(int sock) {
+    int highlight = 0;
+    const char *options[] = { "📥 받은 메시지함", "✉️ 메시지 보내기", "🔙 뒤로 가기" };
+    int num_options = sizeof(options) / sizeof(options[0]);
+
     while (1) {
         clear(); box(stdscr, 0, 0);
-        mvprintw(2, 2, "💬  채팅 메뉴");
-        mvprintw(4, 4, "[1] 받은 메시지함");
-        mvprintw(5, 4, "[2] 메시지 보내기");
-        mvprintw(6, 4, "[Q] 뒤로 가기");
-        mvprintw(8, 2, "선택: ");
-        refresh();
+        int y = get_centered_y(num_options + 6);
+        mvprintw(y, get_centered_x("💬 채팅 메뉴"), "💬 채팅 메뉴");
 
+        for (int i = 0; i < num_options; i++) {
+            int x = get_centered_x(options[i]);
+            if (i == highlight) {
+                attron(COLOR_PAIR(3) | A_BOLD);
+                mvprintw(y + 2 + i, x - 2, "➤ %s", options[i]);
+                attroff(COLOR_PAIR(3) | A_BOLD);
+            } else {
+                mvprintw(y + 2 + i, x, "%s", options[i]);
+            }
+        }
+
+        refresh();
         int ch = getch();
-        if (ch == '1') chat_view_inbox(sock);
-        else if (ch == '2') chat_send_message(sock);
-        else if (ch == 'q' || ch == 'Q') break;
+        if (ch == KEY_UP) highlight = (highlight - 1 + num_options) % num_options;
+        else if (ch == KEY_DOWN) highlight = (highlight + 1) % num_options;
+        else if (ch == '\n') {
+            if (highlight == 0) chat_view_inbox(sock);
+            else if (highlight == 1) chat_send_message(sock);
+            else break;
+        }
     }
 }
