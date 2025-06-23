@@ -72,12 +72,12 @@ int handle_login(int client_sock, char *user_id_buf) {
             if (check_user_credentials(req.user_id, req.password)) {
                 res.success = 1;
                 res.money = get_user_asset(req.user_id);
-                snprintf(res.message, MAX_MSG_LEN, "Login success, welcome %s!", req.user_id);
+                snprintf(res.message, MAX_MSG_LEN, "로그인이 성공했습니다, 환영합니다 %s!", req.user_id);
                 strcpy(user_id_buf, req.user_id);
             } else {
                 res.success = 0;
                 res.money = 0;
-                snprintf(res.message, MAX_MSG_LEN, "Login failed.");
+                snprintf(res.message, MAX_MSG_LEN, "로그인이 실패하였습니다.");
             }
             send(client_sock, &res, sizeof(res), 0);
             if (res.success) return 1;
@@ -88,10 +88,10 @@ int handle_login(int client_sock, char *user_id_buf) {
             if (strlen(req.password) == 0) {
                 if (check_user_id_exists(req.user_id)) {
                     res.success = 0;
-                    snprintf(res.message, MAX_MSG_LEN, "ID already exists.");
+                    snprintf(res.message, MAX_MSG_LEN, "이미 사용 중인 ID입니다");
                 } else {
                     res.success = 1;
-                    snprintf(res.message, MAX_MSG_LEN, "ID is available.");
+                    snprintf(res.message, MAX_MSG_LEN, "사용 가능한 ID입니다");
                 }
             } else {
                 FILE *fp = fopen("data/user_db.txt", "a");
@@ -103,7 +103,7 @@ int handle_login(int client_sock, char *user_id_buf) {
                 fclose(afp);
 
                 res.success = 1;
-                snprintf(res.message, MAX_MSG_LEN, "Registration complete.");
+                snprintf(res.message, MAX_MSG_LEN, "회원가입을 성공했습니다.");
             }
             send(client_sock, &res, sizeof(res), 0);
         }
