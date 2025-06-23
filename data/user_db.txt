@@ -2,5 +2,3 @@ admin:1234
 jiyun:qwer1234
 minji:hello5678
 kangmu:qwer1234
-kangmi:1234
-asdf:asdf

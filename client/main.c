@@ -1,4 +1,3 @@
-////client/main.c (요구사항 반영 버전)
 #include <ncursesw/ncurses.h>
 #include <stdlib.h>
 #include <string.h>
