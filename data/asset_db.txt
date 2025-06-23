@@ -1,4 +1,6 @@
-admin:1010
+admin:770
 jiyun:750
 minji:1200
-kangmu:175
+kangmu:375
+kangmi:0
+asdf:0
