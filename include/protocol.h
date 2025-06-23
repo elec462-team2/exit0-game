@@ -99,12 +99,13 @@ typedef struct {
     CommandType cmd;
     int player_score;
     int dealer_score;
-    int dealer_cards[MAX_CARDS]; // 딜러 카드 히스토리
-    int dealer_card_count;       // 뽑은 카드 수
     int win;
     int bet;
     int new_money;
     int is_final;
+    int dealer_card_count;
+    int dealer_cards[MAX_CARDS];
+    int last_card;
 } BlackjackResponse;
 
 // 경마 게임 요청
